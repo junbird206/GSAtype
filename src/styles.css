@@ -137,9 +137,9 @@ p {
   max-width: 430px;
   margin: 0 auto;
   color: var(--crimson-dark);
-  font-size: clamp(2.55rem, 11.5vw, 3.95rem);
+  font-size: clamp(2.7rem, 11.8vw, 4.05rem);
   font-weight: 800;
-  line-height: 1.04;
+  line-height: 1.05;
   letter-spacing: 0;
   text-align: center;
   word-break: keep-all;
