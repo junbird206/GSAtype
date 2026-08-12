@@ -25,7 +25,7 @@ function renderLanding() {
   app.innerHTML = `
     <section class="hero-screen screen-enter">
       <div class="hero-art" aria-hidden="true">
-        <img src="./assets/tigers/white.svg" alt="" />
+        <img src="./assets/tigers/white.png" alt="" />
       </div>
       <p class="eyebrow">고려대 2학기 생존 테스트</p>
       <h1>나의 2학기 생존 호랑이 유형은?</h1>

@@ -7,3 +7,6 @@ node_modules/
 
 # Local Netlify folder
 .netlify
+
+# Local image generation intermediates
+assets/tigers/generated/

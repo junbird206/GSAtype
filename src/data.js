@@ -14,7 +14,7 @@ export const TYPES = [
     badMatch: "romance",
     prompt:
       "이 전공 자료를 시험 대비용으로 3단계 요약해줘. 1단계는 핵심 개념, 2단계는 헷갈리는 비교표, 3단계는 예상 문제 5개로 정리해줘.",
-    imageAsset: "./assets/tigers/white.svg"
+    imageAsset: "./assets/tigers/white.png"
   },
   {
     id: "cheer",
@@ -28,7 +28,7 @@ export const TYPES = [
     badMatch: "eng",
     prompt:
       "이 회의록을 바탕으로 발표 흐름을 5분짜리 대본으로 만들어줘. 역할 분담과 다음 액션 아이템도 마지막에 표로 정리해줘.",
-    imageAsset: "./assets/tigers/cheer.svg"
+    imageAsset: "./assets/tigers/cheer.png"
   },
   {
     id: "eng",
@@ -42,7 +42,7 @@ export const TYPES = [
     badMatch: "cheer",
     prompt:
       "이 에러 로그를 원인 후보별로 분석해줘. 가장 가능성 높은 원인, 확인 방법, 수정 예시 코드를 순서대로 알려줘.",
-    imageAsset: "./assets/tigers/eng.svg"
+    imageAsset: "./assets/tigers/eng.png"
   },
   {
     id: "void",
@@ -56,7 +56,7 @@ export const TYPES = [
     badMatch: "spec",
     prompt:
       "오늘 4시간 공강 동안 할 일을 현실적으로 짜줘. 집중 25분, 휴식 10분 단위로 나누고 마지막 30분은 쉬는 시간으로 남겨줘.",
-    imageAsset: "./assets/tigers/void.svg"
+    imageAsset: "./assets/tigers/void.png"
   },
   {
     id: "spec",
@@ -70,7 +70,7 @@ export const TYPES = [
     badMatch: "void",
     prompt:
       "이 아이디어를 공모전 기획서 초안으로 구조화해줘. 문제 정의, 타깃, 핵심 솔루션, 기대 효과, 실행 일정 순서로 써줘.",
-    imageAsset: "./assets/tigers/spec.svg"
+    imageAsset: "./assets/tigers/spec.png"
   },
   {
     id: "romance",
@@ -84,7 +84,7 @@ export const TYPES = [
     badMatch: "white",
     prompt:
       "교수님께 보낼 정중한 결석 메일을 써줘. 핑계처럼 보이지 않게 간결하고 예의 있게, 보강 의지도 포함해줘.",
-    imageAsset: "./assets/tigers/romance.svg"
+    imageAsset: "./assets/tigers/romance.png"
   }
 ];
 

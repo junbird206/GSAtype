@@ -13,7 +13,7 @@ const themes = {
 };
 
 export async function generateResultCard(type, matchNames) {
-  const canvas = document.createElement("canvas");
+  const canvas = document.querySelector("#share-renderer") ?? document.createElement("canvas");
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext("2d");
@@ -22,7 +22,7 @@ export async function generateResultCard(type, matchNames) {
   drawBackground(ctx, background, accent, ink);
 
   const image = await loadImage(type.imageAsset);
-  ctx.drawImage(image, 220, 255, 640, 640);
+  drawContainedImage(ctx, image, 160, 220, 760, 760);
 
   drawCenteredText(ctx, "나의 2학기 생존 호랑이는", 540, 1015, 44, ink, "700");
   drawWrappedText(ctx, type.name, 540, 1110, 780, 86, 1.12, accent, "900", "center");
@@ -105,6 +105,13 @@ function drawInfoPill(ctx, text, x, y, width, fill, textColor) {
   ctx.font = "800 30px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(text, x + width / 2, y + 55);
+}
+
+function drawContainedImage(ctx, image, x, y, width, height) {
+  const ratio = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * ratio;
+  const drawHeight = image.naturalHeight * ratio;
+  ctx.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
 }
 
 function drawCenteredText(ctx, text, x, y, size, color, weight = "700") {
