@@ -2,6 +2,7 @@ import { TEST_PUBLIC_URL } from "./data.js";
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
+const GEMINI_LOCKUP = "./assets/gemini/google-gemini-lockup.png";
 
 const themes = {
   white: ["#F7F4EA", "#A91532", "#1F2933"],
@@ -31,21 +32,24 @@ export async function generateResultCard(type, matchNames) {
   drawInfoPill(ctx, `찰떡궁합 ${matchNames.good}`, 130, 1465, 390, accent, "#FFFFFF");
   drawInfoPill(ctx, `거리두기 ${matchNames.bad}`, 560, 1465, 390, ink, "#FFFFFF");
 
+  const logo = await loadImage(GEMINI_LOCKUP);
+  drawContainedImage(ctx, logo, 325, 1564, 430, 76);
+
   ctx.fillStyle = ink;
   ctx.font = "700 34px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("대학생·대학원생이라면", 540, 1640);
+  ctx.fillText("대학생·대학원생이라면", 540, 1682);
   ctx.fillStyle = accent;
   ctx.font = "900 50px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("Google AI Plus 12개월 무료", 540, 1705);
+  ctx.fillText("Google AI Plus 12개월 무료", 540, 1747);
 
   ctx.fillStyle = ink;
   ctx.font = "800 46px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(TEST_PUBLIC_URL, 540, 1815);
+  ctx.fillText(TEST_PUBLIC_URL, 540, 1832);
 
   ctx.fillStyle = "rgba(31, 41, 51, 0.62)";
   ctx.font = "500 28px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("스토리에 올릴 때 링크 스티커도 같이 달아주세요!", 540, 1875);
+  ctx.fillText("스토리에 올릴 때 링크 스티커도 같이 달아주세요!", 540, 1887);
 
   return canvasToBlob(canvas);
 }
@@ -55,23 +59,32 @@ export async function saveOrShareResultCard(type, matchNames) {
   const file = new File([blob], `korea-tiger-${type.id}.png`, { type: "image/png" });
 
   if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({
-      files: [file],
-      title: "나의 2학기 생존 호랑이 유형",
-      text: `${type.name} 결과가 나왔어요`
-    });
-    return "shared";
+    try {
+      await navigator.share({
+        files: [file],
+        title: "나의 2학기 생존 호랑이 유형",
+        text: `${type.name} 결과가 나왔어요`
+      });
+      return "shared";
+    } catch {
+      downloadBlob(blob, file.name);
+      return "downloaded";
+    }
   }
 
+  downloadBlob(blob, file.name);
+  return "downloaded";
+}
+
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = file.name;
+  link.download = filename;
   document.body.append(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  return "downloaded";
 }
 
 function drawBackground(ctx, background, accent, ink) {

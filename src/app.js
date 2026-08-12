@@ -90,6 +90,7 @@ function renderLoading() {
         <span class="loading-fill"></span>
       </div>
       <aside class="student-banner">
+        <img class="gemini-lockup gemini-lockup-light" src="./assets/gemini/google-gemini-lockup-white.png" alt="Google Gemini" />
         <strong>대학생·대학원생이라면 Google AI Plus 12개월 무료</strong>
         <span>결과에서 바로 확인할 수 있어요.</span>
       </aside>
@@ -132,7 +133,11 @@ function renderResult() {
       </section>
 
       <section class="prompt-section" aria-labelledby="prompt-title">
-        <h3 id="prompt-title">이 호랑이를 위한 Gemini 치트키</h3>
+        <img class="gemini-orbit gemini-orbit-pen" src="./assets/gemini/icon-pen.png" alt="" aria-hidden="true" />
+        <h3 id="prompt-title">
+          <img class="gemini-mark" src="./assets/gemini/google-gemini-lockup.png" alt="Google Gemini" />
+          <span>이 호랑이를 위한 Gemini 치트키</span>
+        </h3>
         <p>${type.prompt}</p>
         <button class="secondary-button" data-action="copy-prompt">프롬프트 복사</button>
       </section>
@@ -142,6 +147,7 @@ function renderResult() {
       <button class="secondary-button" data-action="copy-link">친구에게 공유</button>
 
       <a class="signup-cta" href="${TEAM_SIGNUP_LINK}" target="_blank" rel="noreferrer">
+        <img class="gemini-lockup gemini-lockup-light" src="./assets/gemini/google-gemini-lockup-white.png" alt="Google Gemini" />
         <span>이 테스트, Gemini로 만들었습니다.</span>
         <strong>대학생·대학원생은 Google AI Plus 12개월 무료 →</strong>
       </a>

@@ -10,3 +10,6 @@ node_modules/
 
 # Local image generation intermediates
 assets/tigers/generated/
+
+# Source brand asset drop folder; optimized app assets live in assets/gemini/
+GeminiAsset/

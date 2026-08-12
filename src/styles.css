@@ -332,8 +332,10 @@ p {
 
 .student-banner,
 .signup-cta {
+  position: relative;
   display: grid;
-  gap: 6px;
+  gap: 7px;
+  overflow: hidden;
   padding: 16px;
   border-radius: 8px;
   background: #1f2933;
@@ -341,16 +343,43 @@ p {
   text-decoration: none;
 }
 
+.gemini-lockup {
+  display: block;
+  width: 142px;
+  height: auto;
+}
+
+.gemini-lockup-light {
+  position: relative;
+  margin-bottom: 2px;
+  z-index: 1;
+}
+
 .student-banner strong,
 .signup-cta strong {
+  position: relative;
+  z-index: 1;
   font-size: 1rem;
   line-height: 1.35;
 }
 
 .student-banner span,
 .signup-cta span {
+  position: relative;
+  z-index: 1;
   color: rgba(255, 255, 255, 0.78);
   font-size: 0.9rem;
+}
+
+.signup-cta::after {
+  position: absolute;
+  right: -26px;
+  bottom: -32px;
+  width: 122px;
+  height: 122px;
+  background: url("../assets/gemini/icon-send.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.12;
 }
 
 .result-screen {
@@ -400,6 +429,48 @@ p {
 .prompt-section h3 {
   color: var(--crimson-dark);
   font-size: 1rem;
+}
+
+.prompt-section {
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid rgba(66, 133, 244, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 250, 240, 0) 42%),
+    #fffaf0;
+}
+
+.prompt-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  position: relative;
+}
+
+.gemini-mark {
+  display: block;
+  width: 118px;
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.prompt-section h3 span {
+  min-width: 0;
+}
+
+.gemini-orbit {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.12;
+}
+
+.gemini-orbit-pen {
+  right: -18px;
+  top: -22px;
+  width: 118px;
 }
 
 .match-grid {
