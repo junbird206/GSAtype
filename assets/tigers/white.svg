@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="중앙광장 지하 거주 백호랑이 placeholder">
+  <rect width="600" height="600" rx="72" fill="#F7F4EA"/>
+  <circle cx="300" cy="314" r="210" fill="#A91532" opacity=".12"/>
+  <path d="M165 238c-28-82 28-116 88-58 30-16 64-16 94 0 60-58 116-24 88 58 34 36 54 83 54 134 0 104-85 169-189 169s-189-65-189-169c0-51 20-98 54-134Z" fill="#FFFDF6" stroke="#A91532" stroke-width="12"/>
+  <path d="M186 188c22 11 38 29 47 52M414 188c-22 11-38 29-47 52M232 307h-76M444 307h-76M231 359h-89M458 359h-89" stroke="#A91532" stroke-width="15" stroke-linecap="round"/>
+  <circle cx="235" cy="337" r="18" fill="#20242B"/>
+  <circle cx="365" cy="337" r="18" fill="#20242B"/>
+  <path d="M279 385c16 16 26 16 42 0" stroke="#20242B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M281 364h38l-19 23Z" fill="#D89B22"/>
+  <text x="300" y="165" text-anchor="middle" font-size="70" font-family="system-ui, sans-serif">📚</text>
+</svg>
