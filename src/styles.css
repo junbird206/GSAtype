@@ -308,9 +308,11 @@ p {
 
 .loading-screen h2 {
   color: var(--crimson-dark);
-  font-size: clamp(1.9rem, 9vw, 2.8rem);
-  line-height: 1.05;
+  font-size: clamp(1.45rem, 6.4vw, 2.05rem);
+  line-height: 1.15;
   text-align: center;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .loading-fill {
