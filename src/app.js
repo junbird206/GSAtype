@@ -28,7 +28,11 @@ function renderLanding() {
         <img src="./assets/tigers/white.png" alt="" />
       </div>
       <p class="eyebrow">고려대 2학기 생존 테스트</p>
-      <h1>나의 2학기 생존 호랑이 유형은?</h1>
+      <h1 class="hero-title" aria-label="나의 2학기 생존 호랑이 유형은?">
+        <span>나의 2학기</span>
+        <span>생존 호랑이</span>
+        <span>유형은?</span>
+      </h1>
       <p class="hero-copy">8문항, 30초면 끝</p>
       <button class="primary-button" data-action="start">시작하기</button>
     </section>
