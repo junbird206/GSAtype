@@ -108,13 +108,17 @@ function renderResult() {
   const type = state.result.type;
   const goodMatch = getTypeById(TYPES, type.goodMatch);
   const badMatch = getTypeById(TYPES, type.badMatch);
+  const titleParts = splitTigerTitle(type.name);
 
   app.innerHTML = `
     <section class="result-screen screen-enter">
       <div class="result-portrait">
         <img src="${type.imageAsset}" alt="${type.name} 캐릭터 이미지" />
       </div>
-      <h2>${type.name}</h2>
+      <h2 class="result-title" aria-label="${type.name}">
+        <span class="result-title-prefix">${titleParts.prefix}</span>
+        <span class="result-title-tiger">${titleParts.tiger}</span>
+      </h2>
       <p class="one-liner">${type.oneLiner}</p>
       <p class="description">${type.description}</p>
 
@@ -235,4 +239,13 @@ async function copyText(text) {
   textarea.select();
   document.execCommand("copy");
   textarea.remove();
+}
+
+function splitTigerTitle(name) {
+  const parts = name.trim().split(" ");
+  const tiger = parts.pop() ?? name;
+  return {
+    prefix: parts.join(" "),
+    tiger
+  };
 }
