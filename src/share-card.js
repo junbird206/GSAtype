@@ -26,7 +26,7 @@ export async function generateResultCard(type) {
 
   await drawBackground(ctx, type, background, accent);
 
-  const titleBottom = drawTypeTitle(ctx, type.name, 540, 1036, 880, TITLE);
+  const titleBottom = drawTypeTitle(ctx, type.name, 540, 880, 880, TITLE);
   const oneLinerBottom = drawBalancedCenteredText(ctx, type.oneLiner, 540, titleBottom + 46, 650, 38, 1.54, TEAL, "900");
   drawWrappedText(ctx, type.description, 72, oneLinerBottom + 68, 936, 34, 1.66, BODY, "700", "left");
 
@@ -70,8 +70,8 @@ async function drawBackground(ctx, type, background, accent) {
   ctx.fillRect(0, 0, CARD_WIDTH, 880);
 
   const image = await loadImage(type.imageAsset);
-  drawContainedImage(ctx, image, 12, 36, 1056, 920);
-  drawVerticalFade(ctx, 875, 1115, PAPER);
+  drawContainedImage(ctx, image, 18, -6, 1044, 980);
+  drawVerticalFade(ctx, 785, 1000, PAPER);
 }
 
 function drawVerticalFade(ctx, fromY, toY, color) {
