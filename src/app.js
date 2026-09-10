@@ -1,6 +1,6 @@
-import { QUESTIONS, TEAM_SIGNUP_LINK, TYPES } from "./data.js";
+import { PROMOTION_LINKS, QUESTIONS, TEST_PUBLIC_URL, TYPES } from "./data.js";
 import { calculateResult, getTypeById } from "./scoring.js";
-import { saveOrShareResultCard } from "./share-card.js";
+import { saveOrShareResultCard } from "./share-card.js?v=20260910-yonsei-layout";
 
 const app = document.querySelector("#app");
 
@@ -24,12 +24,10 @@ function render() {
 function renderLanding() {
   app.innerHTML = `
     <section class="hero-screen screen-enter">
-      <div class="hero-art" aria-hidden="true">
-        <img src="./assets/tigers/white.png" alt="" />
-      </div>
       <p class="eyebrow">고려대 2학기 생존 테스트</p>
-      <h1 class="hero-title" aria-label="나의 2학기 호랑이 유형은?">
-        <span>나의 2학기</span>
+      <h1 class="hero-title" aria-label="나의 고려대 2학기 생존 호랑이 유형은?">
+        <span>나의 고려대</span>
+        <span>2학기 생존</span>
         <span>호랑이 유형은?</span>
       </h1>
       <p class="hero-copy">8문항, 30초면 끝</p>
@@ -91,7 +89,7 @@ function renderLoading() {
       </div>
       <aside class="student-banner">
         <img class="gemini-lockup gemini-lockup-light" src="./assets/gemini/google-gemini-lockup-white.png" alt="Google Gemini" />
-        <strong>대학생·대학원생이라면 Google AI Plus 12개월 무료</strong>
+        <strong>대학생·대학원생이라면 Google AI Plus 1년 무료</strong>
         <span>결과에서 바로 확인할 수 있어요.</span>
       </aside>
     </section>
@@ -111,10 +109,8 @@ function renderResult() {
   const titleParts = splitTigerTitle(type.name);
 
   app.innerHTML = `
-    <section class="result-screen screen-enter">
-      <div class="result-portrait">
-        <img src="${type.imageAsset}" alt="${type.name} 캐릭터 이미지" />
-      </div>
+    <section class="result-screen result-${type.id} screen-enter">
+      <div class="result-visual" role="img" aria-label="${type.name} 캐릭터 이미지"></div>
       <h2 class="result-title" aria-label="${type.name}">
         <span class="result-title-prefix">${titleParts.prefix}</span>
         <span class="result-title-tiger">${titleParts.tiger}</span>
@@ -136,24 +132,22 @@ function renderResult() {
         </div>
       </section>
 
-      <section class="prompt-section" aria-labelledby="prompt-title">
-        <img class="gemini-orbit gemini-orbit-pen" src="./assets/gemini/icon-pen.png" alt="" aria-hidden="true" />
-        <h3 id="prompt-title">
-          <img class="gemini-mark" src="./assets/gemini/google-gemini-lockup.png" alt="Google Gemini" />
-          <span>이 호랑이를 위한 Gemini 치트키</span>
-        </h3>
-        <p>${type.prompt}</p>
-        <button class="secondary-button" data-action="copy-prompt">프롬프트 복사</button>
-      </section>
-
       <button class="save-button" data-action="save-image">결과 이미지 저장</button>
-      ${state.saveMessage ? `<p class="save-message">${state.saveMessage}</p>` : ""}
       <button class="secondary-button" data-action="copy-link">친구에게 공유</button>
 
-      <a class="signup-cta" href="${TEAM_SIGNUP_LINK}" target="_blank" rel="noreferrer">
+      <section class="gemini-setting" aria-labelledby="gemini-setting-title">
+        <div class="gemini-setting-copy">
+          <h3 id="gemini-setting-title">이 호랑이를 위한 Gemini 세팅법</h3>
+          <p>${type.settingPrompt}</p>
+        </div>
+        <button class="prompt-copy-button" data-action="copy-setting">세팅법 복사</button>
+      </section>
+      ${state.saveMessage ? `<p class="save-message">${state.saveMessage}</p>` : ""}
+
+      <a class="signup-cta" href="${PROMOTION_LINKS[0]}" target="_blank" rel="noreferrer" data-action="promotion-link">
         <img class="gemini-lockup gemini-lockup-light" src="./assets/gemini/google-gemini-lockup-white.png" alt="Google Gemini" />
         <span>이 테스트, Gemini로 만들었습니다.</span>
-        <strong>대학생·대학원생은 Google AI Plus 12개월 무료 →</strong>
+        <strong>대학생·대학원생은 Google AI Plus 1년 무료 → (클릭)</strong>
       </a>
 
       <button class="ghost-button restart-button" data-action="restart">테스트 다시 하기</button>
@@ -169,7 +163,7 @@ function renderResult() {
         good: goodMatch.name,
         bad: badMatch.name
       });
-      state.saveMessage = "스토리에 올릴 때 링크 스티커도 같이 달아주세요!";
+      state.saveMessage = "";
     } catch {
       state.saveMessage = "이미지 저장을 다시 시도해주세요.";
     } finally {
@@ -178,15 +172,20 @@ function renderResult() {
   });
 
   app.querySelector("[data-action='copy-link']").addEventListener("click", async () => {
-    await copyText(window.location.href);
-    state.saveMessage = "테스트 링크를 복사했어요.";
+    const shareStatus = await shareResult(type);
+    if (shareStatus === "cancelled") return;
+    state.saveMessage = shareStatus === "shared" ? "공유창을 열었어요." : "테스트 링크를 복사했어요.";
     renderResult();
   });
 
-  app.querySelector("[data-action='copy-prompt']").addEventListener("click", async () => {
-    await copyText(type.prompt);
-    state.saveMessage = "Gemini 치트키 프롬프트를 복사했어요.";
+  app.querySelector("[data-action='copy-setting']").addEventListener("click", async () => {
+    await copyText(type.settingPrompt);
+    state.saveMessage = "Gemini 세팅법을 복사했어요.";
     renderResult();
+  });
+
+  app.querySelector("[data-action='promotion-link']").addEventListener("click", (event) => {
+    event.currentTarget.href = getRandomPromotionLink();
   });
 
   app.querySelector("[data-action='restart']").addEventListener("click", () => {
@@ -241,9 +240,42 @@ async function copyText(text) {
   textarea.remove();
 }
 
+async function shareResult(type) {
+  const shareData = {
+    title: "나의 고려대 2학기 생존 호랑이 유형은?",
+    text: `나는 ${type.name}! ${type.oneLiner}`,
+    url: getShareUrl()
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return "shared";
+    } catch (error) {
+      if (error?.name === "AbortError") return "cancelled";
+    }
+  }
+
+  await copyText(shareData.url);
+  return "copied";
+}
+
+function getShareUrl() {
+  if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+    return window.location.href;
+  }
+
+  return `https://${TEST_PUBLIC_URL}`;
+}
+
+function getRandomPromotionLink() {
+  const index = Math.floor(Math.random() * PROMOTION_LINKS.length);
+  return PROMOTION_LINKS[index];
+}
+
 function splitTigerTitle(name) {
   const parts = name.trim().split(" ");
-  const tiger = parts.pop() ?? name;
+  const tiger = parts.at(-1) === "호랑이" ? parts.splice(-2).join(" ") : (parts.pop() ?? name);
   return {
     prefix: parts.join(" "),
     tiger

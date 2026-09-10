@@ -1,11 +1,13 @@
-import { TEST_PUBLIC_URL } from "./data.js";
-
 const CARD_WIDTH = 1080;
-const CARD_HEIGHT = 1920;
-const GEMINI_LOCKUP = "./assets/gemini/google-gemini-lockup.png";
+const CARD_HEIGHT = 1728;
+const PAPER = "#FFF8EA";
+const TITLE = "#6E1024";
+const TEAL = "#0F766E";
+const BODY = "#3F3A39";
+const FONT_STACK = "'IBM Plex Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
 
 const themes = {
-  white: ["#F7F4EA", "#A91532", "#1F2933"],
+  white: ["#FFF8EA", "#A91532", "#1F2933"],
   cheer: ["#FFF1D2", "#B0173A", "#182D4E"],
   eng: ["#F4F7FB", "#C41E3A", "#263238"],
   void: ["#EAF4F1", "#7E1B2E", "#174A48"],
@@ -13,66 +15,28 @@ const themes = {
   romance: ["#FFF0EA", "#B51E35", "#524033"]
 };
 
-export async function generateResultCard(type, matchNames) {
+export async function generateResultCard(type) {
+  await document.fonts?.ready;
+
   const canvas = document.querySelector("#share-renderer") ?? document.createElement("canvas");
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext("2d");
-  const [background, accent, ink] = themes[type.id] ?? themes.white;
+  const [background, accent] = themes[type.id] ?? themes.white;
 
-  drawBackground(ctx, background, accent, ink);
+  await drawBackground(ctx, type, background, accent);
 
-  const image = await loadImage(type.imageAsset);
-  drawContainedImage(ctx, image, 160, 220, 760, 760);
-
-  drawCenteredText(ctx, "나의 2학기 생존 호랑이는", 540, 1015, 44, ink, "700");
-  drawWrappedText(ctx, type.name, 540, 1110, 780, 86, 1.12, accent, "900", "center");
-  drawWrappedText(ctx, type.oneLiner, 540, 1325, 780, 42, 1.45, ink, "700", "center");
-
-  drawInfoPill(ctx, `찰떡궁합 ${matchNames.good}`, 130, 1465, 390, accent, "#FFFFFF");
-  drawInfoPill(ctx, `거리두기 ${matchNames.bad}`, 560, 1465, 390, ink, "#FFFFFF");
-
-  const logo = await loadImage(GEMINI_LOCKUP);
-  drawContainedImage(ctx, logo, 325, 1564, 430, 76);
-
-  ctx.fillStyle = ink;
-  ctx.font = "700 34px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("대학생·대학원생이라면", 540, 1682);
-  ctx.fillStyle = accent;
-  ctx.font = "900 50px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("Google AI Plus 12개월 무료", 540, 1747);
-
-  ctx.fillStyle = ink;
-  ctx.font = "800 46px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText(TEST_PUBLIC_URL, 540, 1832);
-
-  ctx.fillStyle = "rgba(31, 41, 51, 0.62)";
-  ctx.font = "500 28px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.fillText("스토리에 올릴 때 링크 스티커도 같이 달아주세요!", 540, 1887);
+  const titleBottom = drawTypeTitle(ctx, type.name, 540, 1036, 880, TITLE);
+  const oneLinerBottom = drawBalancedCenteredText(ctx, type.oneLiner, 540, titleBottom + 46, 650, 38, 1.54, TEAL, "900");
+  drawWrappedText(ctx, type.description, 72, oneLinerBottom + 68, 936, 34, 1.66, BODY, "700", "left");
 
   return canvasToBlob(canvas);
 }
 
-export async function saveOrShareResultCard(type, matchNames) {
-  const blob = await generateResultCard(type, matchNames);
-  const file = new File([blob], `korea-tiger-${type.id}.png`, { type: "image/png" });
-
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: "나의 2학기 생존 호랑이 유형",
-        text: `${type.name} 결과가 나왔어요`
-      });
-      return "shared";
-    } catch {
-      downloadBlob(blob, file.name);
-      return "downloaded";
-    }
-  }
-
-  downloadBlob(blob, file.name);
+export async function saveOrShareResultCard(type) {
+  const blob = await generateResultCard(type);
+  const filename = `korea-tiger-${type.id}.png`;
+  downloadBlob(blob, filename);
   return "downloaded";
 }
 
@@ -84,40 +48,41 @@ function downloadBlob(blob, filename) {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function drawBackground(ctx, background, accent, ink) {
-  ctx.fillStyle = background;
+async function drawBackground(ctx, type, background, accent) {
+  ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
 
-  ctx.fillStyle = accent;
-  ctx.fillRect(0, 0, CARD_WIDTH, 26);
-  ctx.fillRect(0, CARD_HEIGHT - 26, CARD_WIDTH, 26);
+  const base = ctx.createLinearGradient(0, 0, CARD_WIDTH, 760);
+  base.addColorStop(0, background);
+  base.addColorStop(0.5, "#FFFBF2");
+  base.addColorStop(1, PAPER);
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
 
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = ink;
-  for (let y = 120; y < CARD_HEIGHT; y += 190) {
-    ctx.fillRect(85, y, 910, 4);
-  }
-  ctx.globalAlpha = 1;
+  const glow = ctx.createRadialGradient(540, 300, 80, 540, 300, 560);
+  glow.addColorStop(0, withAlpha(accent, 0.18));
+  glow.addColorStop(0.48, withAlpha(accent, 0.08));
+  glow.addColorStop(1, withAlpha(accent, 0));
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, CARD_WIDTH, 880);
 
-  ctx.beginPath();
-  ctx.roundRect(86, 112, 908, 1696, 44);
-  ctx.strokeStyle = accent;
-  ctx.lineWidth = 8;
-  ctx.stroke();
+  const image = await loadImage(type.imageAsset);
+  drawContainedImage(ctx, image, 12, 36, 1056, 920);
+  drawVerticalFade(ctx, 875, 1115, PAPER);
 }
 
-function drawInfoPill(ctx, text, x, y, width, fill, textColor) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, width, 86, 43);
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.fillStyle = textColor;
-  ctx.font = "800 30px system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(text, x + width / 2, y + 55);
+function drawVerticalFade(ctx, fromY, toY, color) {
+  const gradient = ctx.createLinearGradient(0, fromY, 0, toY);
+  gradient.addColorStop(0, withAlpha(color, 0));
+  gradient.addColorStop(0.46, withAlpha(color, 0.8));
+  gradient.addColorStop(1, color);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, fromY, CARD_WIDTH, toY - fromY);
+  ctx.fillStyle = color;
+  ctx.fillRect(0, toY, CARD_WIDTH, CARD_HEIGHT - toY);
 }
 
 function drawContainedImage(ctx, image, x, y, width, height) {
@@ -129,14 +94,63 @@ function drawContainedImage(ctx, image, x, y, width, height) {
 
 function drawCenteredText(ctx, text, x, y, size, color, weight = "700") {
   ctx.fillStyle = color;
-  ctx.font = `${weight} ${size}px system-ui, -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.font = `${weight} ${size}px ${FONT_STACK}`;
   ctx.textAlign = "center";
   ctx.fillText(text, x, y);
+  return y + size;
+}
+
+function drawTypeTitle(ctx, name, x, y, maxWidth, color) {
+  const { prefix, tiger } = splitTigerTitle(name);
+  const prefixBottom = drawCenteredText(ctx, prefix, x, y, 50, color, "900");
+  return drawWrappedText(ctx, tiger, x, prefixBottom + 42, maxWidth, 86, 1.06, color, "900", "center");
+}
+
+function drawBalancedCenteredText(ctx, text, x, y, maxWidth, size, lineHeight, color, weight) {
+  ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px ${FONT_STACK}`;
+  ctx.textAlign = "center";
+
+  const words = text.split(" ");
+  const fullWidth = ctx.measureText(text).width;
+  if (fullWidth <= maxWidth) {
+    ctx.fillText(text, x, y);
+    return y + size;
+  }
+
+  let bestLines = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let index = 1; index < words.length; index += 1) {
+    const firstLine = words.slice(0, index).join(" ");
+    const secondLine = words.slice(index).join(" ");
+    const firstWidth = ctx.measureText(firstLine).width;
+    const secondWidth = ctx.measureText(secondLine).width;
+    if (firstWidth > maxWidth || secondWidth > maxWidth) continue;
+
+    const orphanPenalty = Math.min(firstLine.length, secondLine.length) < 8 ? 1000 : 0;
+    const score = Math.abs(firstWidth - secondWidth) + orphanPenalty;
+    if (score < bestScore) {
+      bestScore = score;
+      bestLines = [firstLine, secondLine];
+    }
+  }
+
+  if (!bestLines) {
+    return drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, color, weight, "center");
+  }
+
+  const lineGap = size * lineHeight;
+  bestLines.forEach((line, index) => {
+    ctx.fillText(line, x, y + index * lineGap);
+  });
+
+  return y + (bestLines.length - 1) * lineGap + size;
 }
 
 function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, color, weight, align = "left") {
   ctx.fillStyle = color;
-  ctx.font = `${weight} ${size}px system-ui, -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.font = `${weight} ${size}px ${FONT_STACK}`;
   ctx.textAlign = align;
 
   const words = text.split(" ");
@@ -154,9 +168,29 @@ function drawWrappedText(ctx, text, x, y, maxWidth, size, lineHeight, color, wei
   });
   lines.push(line);
 
+  const lineGap = size * lineHeight;
   lines.forEach((wrappedLine, index) => {
-    ctx.fillText(wrappedLine, x, y + index * size * lineHeight);
+    ctx.fillText(wrappedLine, x, y + index * lineGap);
   });
+
+  return y + (lines.length - 1) * lineGap + size;
+}
+
+function splitTigerTitle(name) {
+  const parts = name.trim().split(" ");
+  const tiger = parts.at(-1) === "호랑이" ? parts.splice(-2).join(" ") : (parts.pop() ?? name);
+  return {
+    prefix: parts.join(" "),
+    tiger
+  };
+}
+
+function withAlpha(hex, alpha) {
+  const normalized = hex.replace("#", "");
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function loadImage(src) {

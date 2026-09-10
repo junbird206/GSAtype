@@ -104,27 +104,51 @@ button {
 }
 
 .hero-screen {
+  --hero-bg-y: calc(-1 * min(7svh, 58px));
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 14px;
+  overflow: hidden;
+  isolation: isolate;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   background:
-    linear-gradient(180deg, rgba(255, 248, 234, 0.2), rgba(255, 248, 234, 1) 70%),
-    radial-gradient(circle at 50% 16%, rgba(216, 155, 34, 0.22), transparent 32%),
-    linear-gradient(155deg, #fff9ec 0%, #fff3df 54%, #f7e2d8 100%);
+    linear-gradient(180deg, rgba(109, 16, 36, 0.02) 0%, rgba(255, 248, 234, 0.08) 54%, rgba(255, 248, 234, 0.82) 78%, #fff8ea 100%),
+    radial-gradient(circle at 50% 13%, rgba(216, 155, 34, 0.22), transparent 34%),
+    url("../assets/tigers/white.png") center var(--hero-bg-y) / min(128cqw, 620px) auto no-repeat,
+    linear-gradient(155deg, #fff6df 0%, #fffaf1 48%, #f0d9ca 100%);
 }
 
-.hero-art {
-  width: min(58cqw, 240px);
-  margin: 0 auto 4px;
-  filter: drop-shadow(0 18px 22px rgba(52, 15, 24, 0.14));
+.hero-screen::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 26% 18%, rgba(255, 255, 255, 0.72) 0 2px, transparent 3px),
+    radial-gradient(circle at 76% 22%, rgba(216, 155, 34, 0.32) 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 42%, rgba(169, 21, 50, 0.12) 0 3px, transparent 4px);
+  content: "";
 }
 
-.hero-art img,
-.result-portrait img {
-  display: block;
-  width: 100%;
-  height: auto;
+.hero-screen::after {
+  position: absolute;
+  inset: auto -20% 0;
+  z-index: 1;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(255, 248, 234, 0), rgba(255, 248, 234, 0.94) 42%, #fff8ea 100%);
+  content: "";
+}
+
+.hero-screen > * {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-art,
+.hero-image,
+.hero-screen > img {
+  display: none !important;
 }
 
 .eyebrow {
@@ -148,7 +172,7 @@ p {
   max-width: 430px;
   margin: 0 auto;
   color: var(--crimson-dark);
-  font-size: clamp(2.55rem, 11.8cqw, 3.55rem);
+  font-size: clamp(2.18rem, 10.2cqw, 3.12rem);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: 0;
@@ -172,7 +196,8 @@ p {
 .primary-button,
 .save-button,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.prompt-copy-button {
   min-height: 52px;
   border: 0;
   border-radius: 8px;
@@ -193,6 +218,15 @@ p {
   border: 1px solid var(--line);
   background: #fffaf0;
   color: var(--crimson-dark);
+}
+
+.prompt-copy-button {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(169, 21, 50, 0.18);
+  background: rgba(169, 21, 50, 0.06);
+  color: var(--crimson-dark);
+  font-size: 0.94rem;
 }
 
 .ghost-button {
@@ -400,15 +434,70 @@ p {
 }
 
 .result-screen {
+  position: relative;
   display: grid;
   gap: 16px;
-  padding-top: 16px;
+  overflow: hidden;
+  isolation: isolate;
+  padding-top: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 234, 0.08), rgba(255, 248, 234, 1) 58%),
+    var(--paper);
 }
 
-.result-portrait {
-  width: min(62cqw, 260px);
-  margin: 0 auto -2px;
-  filter: drop-shadow(0 18px 22px rgba(52, 15, 24, 0.16));
+.result-screen > * {
+  position: relative;
+  z-index: 2;
+}
+
+.result-white {
+  --result-bg: url("../assets/tigers/white.png");
+}
+
+.result-cheer {
+  --result-bg: url("../assets/tigers/cheer.png");
+}
+
+.result-eng {
+  --result-bg: url("../assets/tigers/eng.png");
+}
+
+.result-void {
+  --result-bg: url("../assets/tigers/void.png");
+}
+
+.result-spec {
+  --result-bg: url("../assets/tigers/spec.png");
+}
+
+.result-romance {
+  --result-bg: url("../assets/tigers/romance.png");
+}
+
+.result-screen::before {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: min(68svh, 640px);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(216, 155, 34, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(109, 16, 36, 0) 0%, rgba(255, 248, 234, 0) 58%, rgba(255, 248, 234, 0.42) 84%, #fff8ea 100%),
+    var(--result-bg) center top / min(118cqw, 560px) auto no-repeat,
+    linear-gradient(155deg, #fff0d2 0%, #fffaf0 50%, #f1d4c4 100%);
+  content: "";
+}
+
+.result-screen::after {
+  position: absolute;
+  inset: min(52svh, 500px) -20% auto;
+  z-index: 1;
+  height: min(18svh, 170px);
+  background: linear-gradient(180deg, rgba(255, 248, 234, 0), rgba(255, 248, 234, 0.92) 64%, #fff8ea 100%);
+  content: "";
+}
+
+.result-visual {
+  min-height: clamp(430px, 56svh, 520px);
 }
 
 .result-title {
@@ -424,17 +513,18 @@ p {
 }
 
 .result-title-prefix {
-  font-size: clamp(1rem, 4.55cqw, 1.32rem);
+  font-size: clamp(1rem, 4.3cqw, 1.28rem);
   font-weight: 800;
   line-height: 1.12;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .result-title-tiger {
-  margin-top: 2px;
-  font-size: clamp(2rem, 9.2cqw, 2.75rem);
+  margin-top: 4px;
+  font-size: clamp(1.9rem, 8.3cqw, 2.48rem);
   font-weight: 800;
-  line-height: 0.98;
+  line-height: 1.02;
+  text-wrap: balance;
 }
 
 .one-liner {
@@ -452,8 +542,7 @@ p {
   line-height: 1.66;
 }
 
-.match-section,
-.prompt-section {
+.match-section {
   display: grid;
   gap: 12px;
   padding: 16px 0;
@@ -461,54 +550,9 @@ p {
   border-bottom: 1px solid var(--line);
 }
 
-.match-section h3,
-.prompt-section h3 {
+.match-section h3 {
   color: var(--crimson-dark);
   font-size: 1rem;
-}
-
-.prompt-section {
-  position: relative;
-  overflow: hidden;
-  padding: 16px;
-  border: 1px solid rgba(66, 133, 244, 0.16);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 250, 240, 0) 42%),
-    #fffaf0;
-}
-
-.prompt-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  position: relative;
-  line-height: 1.35;
-}
-
-.gemini-mark {
-  display: block;
-  width: 118px;
-  height: auto;
-  flex: 0 0 auto;
-}
-
-.prompt-section h3 span {
-  min-width: 0;
-  text-wrap: balance;
-}
-
-.gemini-orbit {
-  position: absolute;
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.12;
-}
-
-.gemini-orbit-pen {
-  right: -18px;
-  top: -22px;
-  width: 118px;
 }
 
 .match-grid {
@@ -539,12 +583,6 @@ p {
   text-wrap: pretty;
 }
 
-.prompt-section p {
-  color: #352f2d;
-  font-size: 0.94rem;
-  line-height: 1.58;
-}
-
 .save-button {
   min-height: 64px;
   font-size: 1.14rem;
@@ -560,6 +598,35 @@ p {
   font-size: 0.92rem;
   font-weight: 900;
   text-align: center;
+}
+
+.gemini-setting {
+  display: grid;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.gemini-setting-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.gemini-setting h3 {
+  color: var(--crimson-dark);
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.24;
+}
+
+.gemini-setting p {
+  color: #3f3a39;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.48;
+  text-wrap: pretty;
 }
 
 .restart-button {
