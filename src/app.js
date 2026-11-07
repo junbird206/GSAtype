@@ -1,6 +1,6 @@
 import { PROMOTION_LINKS, QUESTIONS, TEST_PUBLIC_URL, TYPES } from "./data.js";
 import { calculateResult, getTypeById } from "./scoring.js";
-import { saveOrShareResultCard } from "./share-card.js?v=20260910-campus-hero";
+import { saveOrShareResultCard } from "./share-card.js?v=20260911-result-scenes-2";
 
 const app = document.querySelector("#app");
 
@@ -36,6 +36,7 @@ function renderLanding() {
   `;
 
   app.querySelector("[data-action='start']").addEventListener("click", () => {
+    trackEvent("test_start");
     state.view = "question";
     state.currentQuestion = 0;
     state.answers = [];
@@ -98,6 +99,7 @@ function renderLoading() {
   window.setTimeout(() => {
     state.view = "result";
     state.result = calculateResult(state.answers, QUESTIONS, TYPES);
+    trackEvent("test_complete");
     render();
   }, 3000);
 }
@@ -163,6 +165,7 @@ function renderResult() {
         good: goodMatch.name,
         bad: badMatch.name
       });
+      trackEvent("result_share");
       state.saveMessage = "";
     } catch {
       state.saveMessage = "이미지 저장을 다시 시도해주세요.";
@@ -174,6 +177,7 @@ function renderResult() {
   app.querySelector("[data-action='copy-link']").addEventListener("click", async () => {
     const shareStatus = await shareResult(type);
     if (shareStatus === "cancelled") return;
+    trackEvent("result_share");
     state.saveMessage = shareStatus === "shared" ? "공유창을 열었어요." : "테스트 링크를 복사했어요.";
     renderResult();
   });
@@ -185,10 +189,12 @@ function renderResult() {
   });
 
   app.querySelector("[data-action='promotion-link']").addEventListener("click", (event) => {
+    trackEvent("cta_click");
     event.currentTarget.href = getRandomPromotionLink();
   });
 
   app.querySelector("[data-action='restart']").addEventListener("click", () => {
+    trackEvent("retry");
     state.view = "landing";
     state.currentQuestion = 0;
     state.answers = [];
@@ -271,6 +277,12 @@ function getShareUrl() {
 function getRandomPromotionLink() {
   const index = Math.floor(Math.random() * PROMOTION_LINKS.length);
   return PROMOTION_LINKS[index];
+}
+
+function trackEvent(name) {
+  if (typeof window.gtag === "function") {
+    window.gtag("event", name);
+  }
 }
 
 function splitTigerTitle(name) {

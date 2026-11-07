@@ -1,6 +1,6 @@
-# 고려대 2학기 생존 호랑이 유형 테스트
+# 나의 호랑이 유형은? (친구 평가형 v2)
 
-고려대학교 재학생 타깃의 모바일 퍼스트 정적 심리테스트 웹앱입니다. 8문항 응답 후 6가지 호랑이 유형 중 하나를 보여주고, 결과 이미지를 인스타그램 스토리 비율로 저장할 수 있습니다.
+자기평가 예상 카드를 바로 만들고, 친구 3명의 평가가 모이면 친구들이 본 유형과 비교 리포트가 열리는 모바일 웹앱입니다. 원래 테스트 코드는 `src/`에 보존했고 새 앱은 `src/v2/`에서 실행합니다.
 
 ## Scripts
 
@@ -10,12 +10,15 @@ npm test
 npm run build
 ```
 
-## Cloudflare Pages
+## 실행 및 배포
 
-- Build command: `npm run build`
-- Build output directory: `dist`
+- Node 22.13 이상이 필요합니다. `npm install` 후 `npm run dev`로 실행합니다.
+- 로컬에서는 SQLite로 평가를 저장합니다. `http://127.0.0.1:4173/`에서 확인할 수 있습니다.
+- 실제 공유 배포는 Netlify Functions와 Supabase 연결이 필요합니다. 정적 파일만 업로드하면 평가를 저장할 수 없습니다.
+- [서버 연결과 검증 안내](server/README.md)를 참고하세요.
 
-## Launch Placeholders
+## 운영 설정
 
-- `src/data.js`의 `TEAM_SIGNUP_LINK`를 실제 가입 링크로 교체
-- `index.html`의 GA4 측정 ID `G-XXXXXXXXXX`를 실제 ID로 교체
+- `config/tiger.js`: 유형, 스탯, 문구, Gemini 가입 링크.
+- `src/v2/app.js`: 기존 GA4 측정 ID 사용. 로컬 환경에서는 분석을 전송하지 않습니다.
+- `database/`: 배포용 데이터베이스 설정. 비밀 키는 서버 환경 변수로만 설정합니다.

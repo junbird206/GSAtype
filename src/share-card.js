@@ -26,7 +26,7 @@ export async function generateResultCard(type) {
 
   await drawBackground(ctx, type, background, accent);
 
-  const titleBottom = drawTypeTitle(ctx, type.name, 540, 880, 880, TITLE);
+  const titleBottom = drawTypeTitle(ctx, type.name, 540, 1080, 880, TITLE);
   const oneLinerBottom = drawBalancedCenteredText(ctx, type.oneLiner, 540, titleBottom + 46, 650, 38, 1.54, TEAL, "900");
   drawWrappedText(ctx, type.description, 72, oneLinerBottom + 68, 936, 34, 1.66, BODY, "700", "left");
 
@@ -69,9 +69,9 @@ async function drawBackground(ctx, type, background, accent) {
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, CARD_WIDTH, 880);
 
-  const image = await loadImage(type.imageAsset);
-  drawContainedImage(ctx, image, 18, -6, 1044, 980);
-  drawVerticalFade(ctx, 785, 1000, PAPER);
+  const image = await loadImage(type.backgroundAsset ?? type.imageAsset);
+  drawWidthImage(ctx, image, 0, 0, CARD_WIDTH);
+  drawVerticalFade(ctx, 1010, 1230, PAPER);
 }
 
 function drawVerticalFade(ctx, fromY, toY, color) {
@@ -90,6 +90,11 @@ function drawContainedImage(ctx, image, x, y, width, height) {
   const drawWidth = image.naturalWidth * ratio;
   const drawHeight = image.naturalHeight * ratio;
   ctx.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+}
+
+function drawWidthImage(ctx, image, x, y, width) {
+  const ratio = width / image.naturalWidth;
+  ctx.drawImage(image, x, y, width, image.naturalHeight * ratio);
 }
 
 function drawCenteredText(ctx, text, x, y, size, color, weight = "700") {

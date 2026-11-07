@@ -450,53 +450,52 @@ p {
 }
 
 .result-white {
-  --result-bg: url("../assets/tigers/white.png");
+  --result-bg: url("../assets/tigers/result-bg-white.png");
 }
 
 .result-cheer {
-  --result-bg: url("../assets/tigers/cheer.png");
+  --result-bg: url("../assets/tigers/result-bg-cheer.png");
 }
 
 .result-eng {
-  --result-bg: url("../assets/tigers/eng.png");
+  --result-bg: url("../assets/tigers/result-bg-eng.png");
 }
 
 .result-void {
-  --result-bg: url("../assets/tigers/void.png");
+  --result-bg: url("../assets/tigers/result-bg-void.png");
 }
 
 .result-spec {
-  --result-bg: url("../assets/tigers/spec.png");
+  --result-bg: url("../assets/tigers/result-bg-spec.png");
 }
 
 .result-romance {
-  --result-bg: url("../assets/tigers/romance.png");
+  --result-bg: url("../assets/tigers/result-bg-romance.png");
 }
 
 .result-screen::before {
   position: absolute;
   inset: 0 0 auto;
   z-index: 0;
-  height: 560px;
+  height: clamp(590px, 70svh, 660px);
   background:
-    radial-gradient(circle at 50% 24%, rgba(216, 155, 34, 0.22), transparent 34%),
-    linear-gradient(180deg, rgba(109, 16, 36, 0) 0, rgba(255, 248, 234, 0) 330px, rgba(255, 248, 234, 0.42) 430px, #fff8ea 530px),
-    var(--result-bg) center top / min(104cqw, 500px) auto no-repeat,
+    linear-gradient(180deg, rgba(255, 248, 234, 0) 0%, rgba(255, 248, 234, 0) 60%, rgba(255, 248, 234, 0.38) 78%, #fff8ea 100%),
+    var(--result-bg) center top / cover no-repeat,
     linear-gradient(155deg, #fff0d2 0%, #fffaf0 50%, #f1d4c4 100%);
   content: "";
 }
 
 .result-screen::after {
   position: absolute;
-  inset: 390px -20% auto;
+  inset: clamp(420px, 49svh, 470px) -20% auto;
   z-index: 1;
-  height: 150px;
-  background: linear-gradient(180deg, rgba(255, 248, 234, 0), rgba(255, 248, 234, 0.92) 64%, #fff8ea 100%);
+  height: 170px;
+  background: linear-gradient(180deg, rgba(255, 248, 234, 0), rgba(255, 248, 234, 0.9) 58%, #fff8ea 100%);
   content: "";
 }
 
 .result-visual {
-  min-height: clamp(370px, 50svh, 392px);
+  min-height: clamp(410px, 47svh, 432px);
 }
 
 .result-title {
