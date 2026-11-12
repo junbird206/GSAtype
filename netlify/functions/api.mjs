@@ -6,7 +6,7 @@ let handler;
 export default async function handleApi(request, context) {
   try {
     handler ??= createApi({
-      store: createSupabaseStore({ url: process.env.SUPABASE_URL, serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY }),
+      store: createSupabaseStore({ url: process.env.SUPABASE_URL, serviceRoleKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY }),
       hashSecret: process.env.TIGER_HASH_SECRET,
     });
     if (!context?.ip) throw new Error('Trusted Netlify client IP is unavailable.');

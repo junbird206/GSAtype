@@ -20,13 +20,13 @@ Production uses Netlify Functions with Supabase PostgreSQL. It never falls back 
 1. Create a Supabase project and run `database/001_tiger_backend.sql`, then `database/002_retention.sql` as the administrator in its SQL editor.
 2. Set these server-only environment variables in Netlify:
    - `SUPABASE_URL`: HTTPS project origin.
-   - `SUPABASE_SERVICE_ROLE_KEY`: server service-role key. Never put it in a `VITE_` variable or the browser.
+   - `SUPABASE_SECRET_KEY`: server-only secret API key (`sb_secret_...`). Legacy `SUPABASE_SERVICE_ROLE_KEY` remains supported as a fallback. Never put either key in a `VITE_` variable or the browser.
    - `TIGER_HASH_SECRET`: stable randomly generated secret of at least 32 characters. Rotating it invalidates existing owner links and device comparisons.
 3. Build with `npm run build` and deploy both `dist/` and `netlify/functions/` using `netlify.toml`. A static-only upload cannot receive ratings.
 4. Connect the intended public domain before distributing links. The app and QR codes use the current site origin.
 5. Verify creation, three independent ratings, owner recovery, exports and deletion against that deployment. Test native Kakao webviews on iOS and Android. Review the existing signup URL and GA4 ID with the team.
 
-No Supabase credentials have been configured and no pivot deployment has been published. The SQL is exercised locally with PostgreSQL via PGlite; hosted Supabase/Netlify integration still requires the account setup above.
+The SQL is exercised locally with PostgreSQL via PGlite. Hosted credentials belong only in the target Netlify site's function environment; never commit them or reuse local SQLite data as the production database.
 
 ## Data and access
 

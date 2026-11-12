@@ -19,11 +19,14 @@ export function createSupabaseStore({ url, serviceRoleKey, fetchImpl = fetch }) 
   if (base.protocol !== 'https:' || base.username || base.password || base.search || base.hash || base.pathname !== '/') {
     throw new Error('SUPABASE_URL must be an HTTPS project origin.');
   }
-  if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required.');
+  if (!serviceRoleKey) throw new Error('A Supabase server key is required.');
+  const headers = { apikey: serviceRoleKey, 'Content-Type': 'application/json' };
+  // New secret keys are opaque API keys, not JWT bearer tokens.
+  if (!serviceRoleKey.startsWith('sb_secret_')) headers.Authorization = `Bearer ${serviceRoleKey}`;
   async function rpc(name, args) {
     const response = await fetchImpl(new URL(`/rest/v1/rpc/${name}`, base), {
       method: 'POST',
-      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ p_input: args ?? {} }),
       signal: AbortSignal.timeout(10_000),
       redirect: 'error',
