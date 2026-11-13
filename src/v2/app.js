@@ -1,5 +1,5 @@
-import { createIcons, ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, Download, Share2, RefreshCw, X, LockKeyhole, ChevronRight, BookOpen, Zap, Users, Layers, Heart, Flag, Sparkles, ShieldCheck, Trash2 } from 'lucide';
-import { theme, copy } from '../../config/tiger.js';
+import { createIcons, ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, Download, Share2, RefreshCw, X, LockKeyhole, ChevronRight, BookOpen, Zap, Users, Layers, Heart, Flag, Sparkles, ShieldCheck, Trash2, Brain, HeartHandshake, Wallet, Laugh } from 'lucide';
+import { theme, copy, themeForCard, themeForScores } from '../../config/tiger.js';
 import { resultFor, difference, keys, radarPoints } from './model.js';
 import { api, storage, deviceId, rememberOwner } from './api.js';
 import { exportCard } from './export.js';
@@ -7,7 +7,7 @@ import { personalCard, personalCardPath } from './personalization.js';
 import { writeClipboard } from './clipboard.js';
 import './styles.css';
 
-const icons = { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, Download, Share2, RefreshCw, X, LockKeyhole, ChevronRight, BookOpen, Zap, Users, Layers, Heart, Flag, Sparkles, ShieldCheck, Trash2 };
+const icons = { ArrowLeft, ArrowRight, ArrowUpRight, Check, Copy, Download, Share2, RefreshCw, X, LockKeyhole, ChevronRight, BookOpen, Zap, Users, Layers, Heart, Flag, Sparkles, ShieldCheck, Trash2, Brain, HeartHandshake, Wallet, Laugh };
 const app = document.querySelector('#app');
 const state = { card: null, tab: 'friends', self: {}, ratings: {}, nickname: '', busy: false, epoch: 0, poll: null };
 const channels = ['kakao', 'insta', 'everytime', 'gopas', 'poster_qr'];
@@ -54,6 +54,7 @@ async function copyText(text, message = '복사했어요. 친구에게 보내 �
 }
 function publicUrl(card, ch = 'kakao') { return `${location.origin}/r/${card.shareId}?ch=${ch}`; }
 function cardMarkup(card, scores, { count = 0, sample = false, compact = false } = {}) {
+  const theme = themeForScores(scores);
   const result = resultFor(scores, count);
   return `<article class="player-card tier-${result.tier.id}${compact ? ' compact-card' : ''}" style="--type-color:${result.type.color}" aria-label="${esc(card.nickname)}님의 ${esc(result.type.name)} ${sample ? '예시' : ''} 카드">
     <div class="card-frame" aria-hidden="true"></div><div class="card-surface">
@@ -67,21 +68,21 @@ function cardMarkup(card, scores, { count = 0, sample = false, compact = false }
   </article>`;
 }
 function landing() {
-  const sample = { grade: 4, stamina: 3, social: 4.5, teamwork: 4, mental: 3.5, goyeon: 5 };
+  const sample = { intelligence: 4, stamina: 3, character: 4.5, wealth: 4, charm: 3.5, humor: 5 };
   shell(`<section class="home"><p class="eyebrow">나의 호랑이 유형은?</p><h1>${copy.heroTitle.join('<br>')}</h1><p class="intro">${copy.heroSubtitle}</p><div class="home-card">${cardMarkup({ nickname: '안암의 호랑이' }, sample, { count: 5, sample: true })}</div><div class="home-action"><a href="/new" data-route class="primary-button">내 호랑이 카드 만들기 ${icon('ArrowRight')}</a><p class="micro">가입 없이 · 6가지 스탯 · 내 예상 카드는 바로</p></div><div class="home-footnote"><span>01 <b>내가 먼저</b></span><span>02 <b>친구 3명이</b></span><span>03 <b>함께 완성</b></span></div></section>`);
 }
-function ratingFields(scores, self = false) {
-  return `<div class="rating-fields">${theme.stats.map((stat, index) => `<fieldset class="stat-field"><legend><span class="stat-icon">${icon(stat.icon)}</span><strong>${stat.name}</strong><span class="field-number">0${index + 1}</span></legend><p>${self ? stat.question.replace('이 사람은', '나는') : stat.question}</p><div class="rating-scale">${[1, 2, 3, 4, 5].map(value => `<label><input type="radio" name="${stat.key}" value="${value}" ${scores[stat.key] === value ? 'checked' : ''} required><span>${value}</span><span class="sr-only">${stat.name} ${value}점</span></label>`).join('')}</div><div class="scale-labels"><span>${stat.low}</span><span>${stat.high}</span></div></fieldset>`).join('')}</div>`;
+function ratingFields(scores, self = false, cardTheme = theme) {
+  return `<div class="rating-fields">${cardTheme.stats.map((stat, index) => `<fieldset class="stat-field"><legend><span class="stat-icon">${icon(stat.icon)}</span><strong>${stat.name}</strong><span class="field-number">0${index + 1}</span></legend><p>${self ? stat.selfQuestion || stat.question.replace('이 사람은', '나는') : stat.question}</p><div class="rating-scale">${[1, 2, 3, 4, 5].map(value => `<label><input type="radio" name="${stat.key}" value="${value}" ${scores[stat.key] === value ? 'checked' : ''} required><span>${value}</span><span class="sr-only">${stat.name} ${value}점</span></label>`).join('')}</div><div class="scale-labels"><span>${stat.low}</span><span>${stat.high}</span></div></fieldset>`).join('')}</div>`;
 }
 function newCard() {
   shell(`<section class="form-page"><div class="page-heading"><p class="eyebrow">MY FIRST CARD</p><h1>${copy.newTitle}</h1><p>${copy.newDescription}</p></div><form id="new-form"><div class="nickname-field"><label for="nickname">카드에 적을 이름</label><input id="nickname" name="nickname" value="${esc(state.nickname)}" placeholder="친구들이 아는 내 별명" minlength="2" maxlength="20" autocomplete="nickname" required aria-describedby="nickname-hint"><p id="nickname-hint">2~10자 · 실명 대신 별명도 좋아요</p></div><div class="form-section-title"><h2>나의 여섯 가지 스탯</h2><span id="answer-count">${Object.keys(state.self).length} / 6</span></div>${ratingFields(state.self, true)}<p class="form-note">점수가 높아야 좋은 건 아니에요. 나와 가까운 쪽을 골라요.</p><p id="form-error" class="form-error" role="alert"></p><div class="form-bottom"><button class="primary-button" type="submit" ${validForm(state.self, state.nickname) ? '' : 'disabled'}>내 예상 카드 만들기 ${icon('ArrowRight')}</button><p class="micro">내 답변은 친구에게 공개되지 않아요.</p></div></form></section>`);
 }
-function validForm(scores, nickname = '호랑이') { const length = Array.from(nickname.trim()).length; return keys.every(key => scores[key]) && length >= 2 && length <= 10; }
+function validForm(scores, nickname = '호랑이', cardTheme = theme) { const length = Array.from(nickname.trim()).length; return cardTheme.stats.every(stat => scores[stat.key]) && length >= 2 && length <= 10; }
 function formStatus() {
   const isSelf = location.pathname === '/new'; const scores = isSelf ? state.self : state.ratings;
   const form = document.querySelector('form'); if (!form) return;
   const count = document.querySelector('#answer-count'); if (count) count.textContent = `${Object.keys(scores).length} / 6`;
-  form.querySelector('[type=submit]').disabled = state.busy || !validForm(scores, isSelf ? state.nickname : undefined);
+  form.querySelector('[type=submit]').disabled = state.busy || !validForm(scores, isSelf ? state.nickname : undefined, isSelf ? theme : themeForCard(state.card));
 }
 function progress(card) {
   const result = resultFor(card.selfScores || card.averages || Object.fromEntries(keys.map(k => [k, 3])), card.count);
@@ -89,13 +90,17 @@ function progress(card) {
   return `<section class="progress-section"><div class="section-label"><span>${card.count < 3 ? '친구들의 시선 모으는 중' : `${result.tier.name} 카드`}</span><strong>${card.count}<span> / ${target || 30}명</span></strong></div><div class="progress-track" role="progressbar" aria-label="친구 평가 수" aria-valuenow="${card.count}" aria-valuemin="0" aria-valuemax="${target || 30}"><span style="width:${Math.min(100, card.count / (target || 30) * 100)}%"></span></div><p>${card.count < 3 ? `<b>${3 - card.count}명</b> 더 모이면 친구들의 카드가 열려요.` : target ? `<b>${target - card.count}명</b> 더 모이면 ${target === 5 ? '실버' : '골드'} 카드로!` : card.count >= 30 ? '30명의 평가가 모두 모였어요.' : '골드 달성! 친구들의 시선은 계속 쌓여요.'}</p></section>`;
 }
 function comparison(card) {
+  const theme = themeForCard(card);
   const diff = difference(card.selfScores, card.averages);
   return `<section class="comparison-section" id="comparison"><p class="eyebrow">THE GAP</p><h2>내가 아는 나와<br>친구들이 아는 나</h2><p class="gap-summary">${diff.text}</p><div class="chart-legend"><span><i class="self-dot"></i>내가 본 나</span><span><i class="friend-dot"></i>친구들이 본 나</span></div><div class="comparison-chart">${theme.stats.map(stat => `<div class="comparison-row"><strong>${stat.name}</strong><div class="bar-pair"><div><span class="self-bar" style="width:${card.selfScores[stat.key] / 5 * 100}%"></span><em>${card.selfScores[stat.key].toFixed(1)}</em></div><div><span class="friend-bar" style="width:${card.averages[stat.key] / 5 * 100}%"></span><em>${card.averages[stat.key].toFixed(1)}</em></div></div></div>`).join('')}</div><p class="micro">각자의 시선은 다를 수 있어요. 1~5점 기준.</p><button class="secondary-button" data-action="export-gap">이 차이도 공유하기 ${icon('Download')}</button></section>`;
 }
 function radar(scores) {
+  const theme = themeForScores(scores);
+  const keys = theme.stats.map(stat => stat.key);
   return `<div class="radar-wrap"><svg viewBox="0 0 200 200" role="img" aria-label="여섯 스탯 레이더 차트">${[1,2,3,4,5].map(n => `<polygon points="${radarPoints(Object.fromEntries(keys.map(k => [k,n])))}" fill="none" stroke="#dedfe2"/>`).join('')}<polygon points="${radarPoints(scores)}" fill="#a8173a26" stroke="#a8173a" stroke-width="2"/></svg><div class="radar-values">${theme.stats.map(stat => `<span>${stat.name}<strong>${scores[stat.key].toFixed(1)}</strong></span>`).join('')}</div></div>`;
 }
 function dashboard(card) {
+  const theme = themeForCard(card);
   const unlocked = card.count >= 3 && card.averages;
   const friendView = unlocked && state.tab === 'friends';
   const scores = friendView ? card.averages : card.selfScores;
@@ -117,9 +122,10 @@ function dashboard(card) {
   }
 }
 function rate(card) {
+  const theme = themeForCard(card);
   if (card.count >= 30) return shell(`<section class="message-page">${icon('Check')}<h1>이 카드는 완성됐어요</h1><p>30명의 친구들이 함께했어요.</p>${cardMarkup(card, card.averages, { count: card.count })}<a href="/new" class="primary-button" data-route>내 카드도 만들기 ${icon('ArrowRight')}</a></section>`);
   if (storage.get(`tiger:rated:${card.shareId}`)) return done(card);
-  shell(`<section class="form-page"><div class="page-heading"><p class="eyebrow">A FRIEND'S PERSPECTIVE</p><h1><span class="nickname-title">${esc(card.nickname)}</span>님은<br>어떤 호랑이인가요?</h1><p>정답은 없어요. 내가 아는 친구의 모습을 골라 주세요.</p></div><div class="rater-context">${icon('Heart')}<span>친구에게는 평균만 보여요. 내 답변은 비공개.</span></div><form id="rating-form"><div class="form-section-title"><h2>내가 보는 ${esc(card.nickname)}</h2><span id="answer-count">${Object.keys(state.ratings).length} / 6</span></div>${ratingFields(state.ratings)}<p id="form-error" class="form-error" role="alert"></p><div class="form-bottom"><button type="submit" class="primary-button" ${validForm(state.ratings) ? '' : 'disabled'}>이 모습으로 전해주기 ${icon('ArrowRight')}</button><p class="micro">6번의 선택이면 충분해요.</p></div></form></section>`);
+  shell(`<section class="form-page"><div class="page-heading"><p class="eyebrow">A FRIEND'S PERSPECTIVE</p><h1><span class="nickname-title">${esc(card.nickname)}</span>님은<br>어떤 호랑이인가요?</h1><p>정답은 없어요. 내가 아는 친구의 모습을 골라 주세요.</p></div><div class="rater-context">${icon('Heart')}<span>친구에게는 평균만 보여요. 내 답변은 비공개.</span></div><form id="rating-form"><div class="form-section-title"><h2>내가 보는 ${esc(card.nickname)}</h2><span id="answer-count">${Object.keys(state.ratings).length} / 6</span></div>${ratingFields(state.ratings, false, theme)}<p id="form-error" class="form-error" role="alert"></p><div class="form-bottom"><button type="submit" class="primary-button" ${validForm(state.ratings, undefined, theme) ? '' : 'disabled'}>이 모습으로 전해주기 ${icon('ArrowRight')}</button><p class="micro">6번의 선택이면 충분해요.</p></div></form></section>`);
 }
 function done(card) {
   const rated = storage.get(`tiger:rated:${card.shareId}`);

@@ -8,17 +8,17 @@ test('all ties produce balanced cards at different ability levels', () => {
   assert.equal(resultFor(all(5)).ovr, 99);
 });
 test('partial ties are explicit and stable; ordering uses unrounded averages', () => {
-  const tied = resultFor({ ...all(2), social: 4, teamwork: 4 });
-  assert.equal(tied.primary, 'social');
-  assert.deepEqual(tied.leaders, ['social', 'teamwork']);
-  assert.equal(resultFor({ ...all(2), social: 4.01, teamwork: 4.02 }).primary, 'teamwork');
+  const tied = resultFor({ ...all(2), character: 4, wealth: 4 });
+  assert.equal(tied.primary, 'character');
+  assert.deepEqual(tied.leaders, ['character', 'wealth']);
+  assert.equal(resultFor({ ...all(2), character: 4.01, wealth: 4.02 }).primary, 'wealth');
 });
 test('tier boundaries and unclamped raw data conversion', () => {
   assert.deepEqual([0, 2, 3, 4, 5, 9, 10, 30].map(n => tierFor(n).id), ['preview','preview','bronze','bronze','silver','silver','gold','gold']);
   assert.equal(toRating(3), 70);
 });
 test('comparison selects greatest absolute difference, including negative and equal', () => {
-  assert.equal(difference(all(3), { ...all(3), social: 5 }).key, 'social');
-  assert.equal(difference(all(3), { ...all(3), mental: 1 }).delta, -2);
+  assert.equal(difference(all(3), { ...all(3), charm: 5 }).key, 'charm');
+  assert.equal(difference(all(3), { ...all(3), humor: 1 }).delta, -2);
   assert.match(difference(all(3), all(3)).text, /닮았어요/);
 });

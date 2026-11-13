@@ -3,7 +3,7 @@ import { chmodSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { ApiError } from './errors.mjs';
-import { SCORE_KEYS } from './validation.mjs';
+import { scoreVersion, scoreKeysForVersion } from '../config/stats.js';
 
 export function createSqliteStore({ dataPath }) {
   if (!dataPath) throw new Error('dataPath is required.');
@@ -61,11 +61,13 @@ export function createSqliteStore({ dataPath }) {
   }
 
   function snapshot(card, owner = false) {
+    const statVersion = scoreVersion(JSON.parse(card.self_scores));
+    const keys = scoreKeysForVersion(statVersion);
     const ratings = db.prepare('SELECT scores FROM ratings WHERE card_id = ?').all(card.id);
     const count = ratings.length;
     const values = count >= 3 ? ratings.map((rating) => JSON.parse(rating.scores)) : [];
-    const averages = count < 3 ? null : Object.fromEntries(SCORE_KEYS.map((key) => [key, values.reduce((sum, scores) => sum + scores[key], 0) / count]));
-    const result = { shareId: card.share_id, nickname: card.nickname, count, unlocked: count >= 3, averages, createdAt: card.created_at };
+    const averages = count < 3 ? null : Object.fromEntries(keys.map((key) => [key, values.reduce((sum, scores) => sum + scores[key], 0) / count]));
+    const result = { shareId: card.share_id, nickname: card.nickname, statVersion, count, unlocked: count >= 3, averages, createdAt: card.created_at };
     if (owner) Object.assign(result, { id: card.id, selfScores: JSON.parse(card.self_scores) });
     return result;
   }
@@ -106,6 +108,9 @@ export function createSqliteStore({ dataPath }) {
     submitRating(input) {
       return transaction(() => {
         const card = findCard('share_id', input.shareId);
+        if (scoreVersion(input.scores) !== scoreVersion(JSON.parse(card.self_scores))) {
+          throw new ApiError(400, 'VALIDATION_ERROR', 'Rating stats must match the card version.');
+        }
         if (card.owner_device_hash === input.deviceHash) throw new ApiError(403, 'OWNER_CANNOT_RATE', 'You cannot rate your own card on this device.');
         if (db.prepare('SELECT 1 FROM ratings WHERE card_id = ? AND device_hash = ?').get(card.id, input.deviceHash)) {
           throw new ApiError(409, 'ALREADY_RATED', 'This device has already rated this card.');

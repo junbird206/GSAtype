@@ -4,7 +4,7 @@ import { personalCard, personalCardPath } from '../src/v2/personalization.js';
 import { theme } from '../config/tiger.js';
 
 const all = value => Object.fromEntries(theme.stats.map(s => [s.key, value]));
-const card = { id: 'demo', nickname: '테스터', count: 3, selfScores: all(1), averages: { ...all(4), teamwork: 5 } };
+const card = { id: 'demo', nickname: '테스터', count: 3, selfScores: all(1), averages: { ...all(4), wealth: 5 } };
 
 test('personalized prompts match the selected card and its six scores', () => {
   for (const view of ['self', 'friends']) {

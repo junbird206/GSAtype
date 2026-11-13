@@ -5,12 +5,14 @@ import { randomUUID, randomBytes } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 import { createApi } from '../server/api.mjs';
 import { createSupabaseStore } from '../server/supabase-store.mjs';
+import { SCORE_KEYS, LEGACY_SCORE_KEYS } from '../config/stats.js';
 
-test('production PostgreSQL migrations and RPCs enforce private access, unlock, duplicates and rating cap', async () => {
+for (const [version, keys, otherKeys] of [['friends-v2', SCORE_KEYS, LEGACY_SCORE_KEYS], ['campus-v1', LEGACY_SCORE_KEYS, SCORE_KEYS]]) {
+test(`production PostgreSQL ${version} enforces private access, unlock, duplicates and rating cap`, async () => {
   const db = new PGlite();
   try {
     await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;');
-    for (const migration of ['001_tiger_backend.sql', '002_retention.sql']) await db.exec(await readFile(new URL(`../database/${migration}`, import.meta.url), 'utf8'));
+    for (const migration of ['001_tiger_backend.sql', '002_retention.sql', '003_friend_stats.sql']) await db.exec(await readFile(new URL(`../database/${migration}`, import.meta.url), 'utf8'));
     const privileges = await db.query(`SELECT
       has_schema_privilege('anon', 'tiger_private', 'USAGE') AS schema_access,
       has_table_privilege('anon', 'tiger_private.cards', 'SELECT') AS read_cards,
@@ -32,7 +34,7 @@ test('production PostgreSQL migrations and RPCs enforce private access, unlock, 
     };
     const store = createSupabaseStore({ url: 'https://project.supabase.co', serviceRoleKey: 'server-only-test-key', fetchImpl });
     const handle = createApi({ store, hashSecret: randomBytes(32).toString('hex'), clock: () => Date.parse('2026-11-04T00:00:00Z'), rateLimits: { create: 100, rating: 200 } });
-    const scores = Object.fromEntries(['grade','stamina','social','teamwork','mental','goyeon'].map(key => [key, 3]));
+    const scores = Object.fromEntries(keys.map(key => [key, 3]));
     async function request(path, method = 'GET', body, key) {
       const res = await handle(new Request(`https://test.local/api${path}`, {
         method, headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
@@ -45,6 +47,11 @@ test('production PostgreSQL migrations and RPCs enforce private access, unlock, 
     assert.equal(created.status, 201, rpcError || JSON.stringify(created.body));
     const card = created.body;
     const path = `/public/${card.shareId}`;
+    const initial = await request(path);
+    assert.equal(initial.body.statVersion, version);
+    assert.equal(initial.body.averages, null);
+    const wrongVersion = await request(`${path}/ratings`, 'POST', { deviceId: randomUUID(), scores: Object.fromEntries(otherKeys.map(key => [key, 3])) });
+    assert.equal(wrongVersion.status, 400);
     const own = await request(`${path}/ratings`, 'POST', { deviceId: ownerDevice, scores });
     assert.equal(own.status, 403);
     assert.equal((await request(`/cards/${card.id}`)).status, 401);
@@ -66,5 +73,32 @@ test('production PostgreSQL migrations and RPCs enforce private access, unlock, 
     assert.equal((await request(`/cards/${card.id}`, 'DELETE', undefined, card.ownerKey)).status, 204);
     assert.equal((await request(path)).status, 404);
     assert.equal((await db.query('SELECT count(*)::integer AS n FROM tiger_private.ratings')).rows[0].n, 0);
+  } finally { await db.close(); }
+});
+}
+
+test('stat migration preserves existing cards and ratings without relabeling their scores', async () => {
+  const db = new PGlite();
+  try {
+    await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;');
+    for (const file of ['001_tiger_backend.sql', '002_retention.sql']) await db.exec(await readFile(new URL(`../database/${file}`, import.meta.url), 'utf8'));
+    const input = { id: randomUUID(), shareId: 'legacycard01', ownerHash: 'a'.repeat(64), deviceHash: 'b'.repeat(64), nickname: '기존카드', selfScores: Object.fromEntries(LEGACY_SCORE_KEYS.map(k => [k, 2])) };
+    const rpc = async (name, args) => (await db.query(`SELECT public.${name}($1::jsonb) AS value`, [JSON.stringify(args)])).rows[0].value;
+    await rpc('tiger_create_card', input);
+    const scores = Object.fromEntries(LEGACY_SCORE_KEYS.map(k => [k, 4]));
+    for (const ch of ['c', 'd', 'e']) await rpc('tiger_submit_rating', { shareId: input.shareId, deviceHash: ch.repeat(64), scores });
+    const before = await rpc('tiger_get_owner_card', { id: input.id, ownerHash: input.ownerHash });
+    await db.exec(await readFile(new URL('../database/003_friend_stats.sql', import.meta.url), 'utf8'));
+    const after = await rpc('tiger_get_owner_card', { id: input.id, ownerHash: input.ownerHash });
+    assert.deepEqual(after.data, { ...before.data, statVersion: 'campus-v1' });
+    const rejected = await rpc('tiger_submit_rating', { shareId: input.shareId, deviceHash: 'f'.repeat(64), scores: Object.fromEntries(SCORE_KEYS.map(k => [k, 4])) });
+    assert.equal(rejected.error, 'VALIDATION_ERROR');
+    const next = await rpc('tiger_submit_rating', { shareId: input.shareId, deviceHash: 'f'.repeat(64), scores });
+    assert.equal(next.data.count, 4);
+    assert.deepEqual(next.data.averages, scores);
+    for (const bad of [{ ...scores, grade: '4' }, { ...scores, grade: 6 }, { ...scores, intelligence: 4 }]) {
+      const check = await db.query('SELECT tiger_private.valid_scores($1::jsonb) AS valid', [JSON.stringify(bad)]);
+      assert.equal(check.rows[0].valid, false);
+    }
   } finally { await db.close(); }
 });

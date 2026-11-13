@@ -1,6 +1,7 @@
 import { ApiError } from './errors.mjs';
+import { SCORE_KEYS, scoreVersion, scoreKeysForVersion } from '../config/stats.js';
 
-export const SCORE_KEYS = Object.freeze(['grade', 'stamina', 'social', 'teamwork', 'mental', 'goyeon']);
+export { SCORE_KEYS };
 export const MAX_BODY_BYTES = 16 * 1024;
 const profanity = ['fuck', 'shit', 'bitch', '\uc2dc\ubc1c', '\uc528\ubc1c', '\ubcd1\uc2e0', '\uac1c\uc0c8\ub07c', '\uc9c0\ub784'];
 const forbiddenCharacters = /[\p{Cc}\p{Cf}\p{Cs}]/u;
@@ -14,11 +15,11 @@ function object(value) {
 }
 
 export function validateScores(value) {
-  if (!object(value) || Object.keys(value).length !== SCORE_KEYS.length ||
-      !SCORE_KEYS.every((key) => Object.hasOwn(value, key) && Number.isInteger(value[key]) && value[key] >= 1 && value[key] <= 5)) {
-    invalid('Scores must contain exactly grade, stamina, social, teamwork, mental, goyeon, each an integer from 1 to 5.');
+  const version = scoreVersion(value);
+  if (!version || !Object.values(value).every(n => Number.isInteger(n) && n >= 1 && n <= 5)) {
+    invalid('Scores must contain all six stats from one supported version, each an integer from 1 to 5.');
   }
-  return Object.fromEntries(SCORE_KEYS.map((key) => [key, value[key]]));
+  return Object.fromEntries(scoreKeysForVersion(version).map((key) => [key, value[key]]));
 }
 
 export function validateBody(body, creating) {

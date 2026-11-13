@@ -17,7 +17,7 @@ The original v1 files remain in `src/`; the active app is `src/v2/`. Existing il
 
 Production uses Netlify Functions with Supabase PostgreSQL. It never falls back to ephemeral local storage.
 
-1. Create a Supabase project and run `database/001_tiger_backend.sql`, then `database/002_retention.sql` as the administrator in its SQL editor.
+1. Create a Supabase project and run `database/001_tiger_backend.sql`, `database/002_retention.sql`, then `database/003_friend_stats.sql` as the administrator in its SQL editor. On an existing deployment, apply only the unapplied migrations before publishing the new app.
 2. Set these server-only environment variables in Netlify:
    - `SUPABASE_URL`: HTTPS project origin.
    - `SUPABASE_SECRET_KEY`: server-only secret API key (`sb_secret_...`). Legacy `SUPABASE_SERVICE_ROLE_KEY` remains supported as a fallback. Never put either key in a `VITE_` variable or the browser.
@@ -27,6 +27,8 @@ Production uses Netlify Functions with Supabase PostgreSQL. It never falls back 
 5. Verify creation, three independent ratings, owner recovery, exports and deletion against that deployment. Test native Kakao webviews on iOS and Android. Review the existing signup URL and GA4 ID with the team.
 
 The SQL is exercised locally with PostgreSQL via PGlite. Hosted credentials belong only in the target Netlify site's function environment; never commit them or reuse local SQLite data as the production database.
+
+New cards use `friends-v2`: intelligence, stamina, character, wealth, charm, humor. Existing `campus-v1` cards retain their original questions, types and score keys. The exact score key set identifies the version; public snapshots include `statVersion` even before averages unlock. Ratings must match their card's version. Migration 003 changes functions only; it does not rewrite or delete existing scores. Older browser clients may continue creating legacy cards until refreshed.
 
 ## Data and access
 

@@ -1,4 +1,7 @@
-export const theme = {
+import { CURRENT_STAT_VERSION, LEGACY_STAT_VERSION, scoreVersion } from './stats.js';
+
+export const legacyTheme = {
+  statVersion: LEGACY_STAT_VERSION,
   id: 'tiger',
   name: '나의 호랑이 유형은?',
   signupUrl: 'https://goo.gle/koreaseoul',
@@ -21,6 +24,37 @@ export const theme = {
   },
 };
 
+export const theme = {
+  ...legacyTheme,
+  statVersion: CURRENT_STAT_VERSION,
+  stats: [
+    { key: 'intelligence', name: '지능', short: '지능', low: '일단 감으로 간다', high: '인간 나무위키', question: '이 사람은 머리 굴릴 때 어느 정도?', selfQuestion: '나는 머리 굴릴 때 어느 정도?', icon: 'Brain' },
+    { key: 'stamina', name: '체력', short: '체력', low: '벌써 집 가고 싶다', high: '얘는 충전기가 없나?', question: '이 사람은 얼마나 오래 버티나?', selfQuestion: '나는 얼마나 오래 버티나?', icon: 'Zap' },
+    { key: 'character', name: '인성', short: '인성', low: '일단 나부터 살자', high: '법 없이도 살 사람', question: '이 사람은 알고 보면 얼마나 착함?', selfQuestion: '나는 알고 보면 얼마나 착함?', icon: 'HeartHandshake' },
+    { key: 'wealth', name: '재력', short: '재력', low: '통장이 다이어트 중', high: '이 정도는 내가 쏜다', question: '이 사람은 지갑에 얼마나 여유 있어 보임?', selfQuestion: '내 지갑에는 얼마나 여유가 있나?', icon: 'Wallet' },
+    { key: 'charm', name: '매력', short: '매력', low: '알수록 진국', high: '등장만 해도 시선 집중', question: '이 사람은 얼마나 사람을 끌어당김?', selfQuestion: '나는 얼마나 사람을 끌어당김?', icon: 'Sparkles' },
+    { key: 'humor', name: '병맛력', short: '병맛력', low: '상식 안에서 사는 편', high: '존재 자체가 밈', question: '이 사람은 얼마나 예측 불가하게 웃김?', selfQuestion: '나는 얼마나 예측 불가하게 웃김?', icon: 'Laugh' },
+  ],
+  types: {
+    intelligence: { ...legacyTheme.types.grade, name: '안암 브레인형', oneLiner: '남들이 물음표 띄울 때 혼자 답까지 구한 사람.', tag: 'THE BRAIN' },
+    stamina: { ...legacyTheme.types.stamina, name: '무한 배터리형', oneLiner: '다들 방전됐는데 혼자 다음 코스 찾는 중.', tag: 'THE ENERGIZER' },
+    character: { ...legacyTheme.types.mental, name: '걸어 다니는 미담형', oneLiner: '장난은 쳐도, 결국 친구부터 챙기는 사람.', tag: 'THE ANGEL' },
+    wealth: { ...legacyTheme.types.teamwork, name: '안암 큰손형', oneLiner: '계산서 앞에서 유독 든든해지는 존재감.', tag: 'THE BIG SPENDER' },
+    charm: { ...legacyTheme.types.social, name: '인간 입덕문형', oneLiner: '별거 안 한 것 같은데 자꾸 생각나는 사람.', tag: 'THE MAGNET' },
+    humor: { ...legacyTheme.types.goyeon, name: '걸어 다니는 밈형', oneLiner: '오늘도 단톡방에 새 짤을 공급하는 사람.', tag: 'THE MEME' },
+    balanced: legacyTheme.types.balanced,
+  },
+};
+
+export function themeForScores(scores) {
+  return scoreVersion(scores) === LEGACY_STAT_VERSION ? legacyTheme : theme;
+}
+
+export function themeForCard(card) {
+  const version = card.statVersion || scoreVersion(card.selfScores || card.averages);
+  return version === CURRENT_STAT_VERSION ? theme : legacyTheme;
+}
+
 export const copy = {
   heroTitle: ['내가 아는 나,', '친구들이 아는 나.'],
   heroSubtitle: '친구들의 시선으로 완성하는 나의 호랑이 카드',
@@ -32,6 +66,7 @@ export const copy = {
 };
 
 export function facePrompt(card, result) {
+  const theme = themeForScores(result.numbers);
   return `첨부한 이미지 2장으로 선수 카드의 인물만 교체해 줘.
 
 [이미지 역할]

@@ -8,7 +8,7 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const screenshots = new URL('../test-results/', import.meta.url).pathname;
 await mkdir(screenshots, { recursive: true });
-const stats = ['grade', 'stamina', 'social', 'teamwork', 'mental', 'goyeon'];
+const stats = ['intelligence', 'stamina', 'character', 'wealth', 'charm', 'humor'];
 const owner = await browser.newContext({ viewport: { width: 360, height: 800 }, deviceScaleFactor: 1 });
 const page = await owner.newPage();
 page.on('pageerror', error => errors.push(error.message));

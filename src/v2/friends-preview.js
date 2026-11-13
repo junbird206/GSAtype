@@ -1,6 +1,7 @@
-import { keys } from './model.js';
+import { themeForCard } from '../../config/tiger.js';
 
 export function withSampleFriends(card) {
+  const keys = themeForCard(card).stats.map(stat => stat.key);
   // Seeded samples stay the same when switching tabs or refreshing this preview.
   let seed = 2166136261;
   for (const char of card.id) seed = Math.imul(seed ^ char.charCodeAt(0), 16777619) >>> 0;

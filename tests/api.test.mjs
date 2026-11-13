@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { createLocalApi } from '../server/local.mjs';
 import { SCORE_KEYS } from '../server/validation.mjs';
+import { LEGACY_SCORE_KEYS } from '../config/stats.js';
 
 const scores = (n) => Object.fromEntries(SCORE_KEYS.map((key) => [key, n]));
 const ownerDevice = 'owner-device-123456789';
@@ -46,7 +47,8 @@ async function create(handleApi, extra, ip) {
 }
 
 function assertPublic(body, count) {
-  assert.deepEqual(Object.keys(body).sort(), ['averages', 'count', 'createdAt', 'nickname', 'shareId', 'unlocked']);
+  assert.deepEqual(Object.keys(body).sort(), ['averages', 'count', 'createdAt', 'nickname', 'shareId', 'statVersion', 'unlocked']);
+  assert.equal(body.statVersion, 'friends-v2');
   assert.equal(body.count, count);
   assert.equal(body.unlocked, count >= 3);
   assert.ok(!Number.isNaN(Date.parse(body.createdAt)));
@@ -93,6 +95,24 @@ test('closing and reopening SQLite preserves owner authentication and duplicate 
   assert.equal((await call(client.handleApi, `/api/cards/${card.id}`, { key: card.ownerKey })).status, 200);
   assert.equal((await call(client.handleApi, path, { method: 'POST', body })).status, 409);
   assert.equal((await call(client.handleApi, path, { method: 'POST', body: { ...body, deviceId: ownerDevice } })).status, 403);
+});
+
+test('legacy cards retain their stats and reject new-version ratings in both directions', async (t) => {
+  const { handleApi } = await fixture(t);
+  const legacyScores = Object.fromEntries(LEGACY_SCORE_KEYS.map(key => [key, 4]));
+  const legacy = await create(handleApi, { selfScores: legacyScores });
+  const current = await create(handleApi);
+  for (const [card, matching, mismatch, version] of [
+    [legacy, legacyScores, scores(4), 'campus-v1'], [current, scores(4), legacyScores, 'friends-v2'],
+  ]) {
+    const path = `/api/public/${card.shareId}`;
+    const initial = await call(handleApi, path);
+    assert.equal(initial.body.statVersion, version);
+    assert.equal(initial.body.averages, null);
+    assert.equal((await call(handleApi, `${path}/ratings`, { method: 'POST', body: { scores: mismatch, deviceId: randomUUID() } })).status, 400);
+    for (let i = 0; i < 3; i++) assert.equal((await call(handleApi, `${path}/ratings`, { method: 'POST', body: { scores: matching, deviceId: randomUUID() } })).status, 201);
+    assert.deepEqual((await call(handleApi, path)).body.averages, matching);
+  }
 });
 
 test('owner, duplicate and cap rules are atomic under parallel multi-client requests', async (t) => {
