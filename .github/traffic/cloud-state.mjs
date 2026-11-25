@@ -32,7 +32,7 @@ if (mode === 'prepare') {
   checkpoint.attemptedSlots = [...new Set([...checkpoint.attemptedSlots, ...pending.map(item => item.slot)])].sort((a, b) => a - b);
   await writeFile(checkpointPath, JSON.stringify(checkpoint, null, 2));
   const probe = active && bootstrap && pending.length === 0;
-  if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `active=${active}\nprobe=${probe}\nexpired=${Date.now() >= end}\n`);
+  if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `active=${active}\nprobe=${probe}\nexpired=${Date.now() >= end}\nslots=${JSON.stringify(pending.map(item => item.slot))}\n`);
   console.log(JSON.stringify({ active, probe, pending, bootstrap, end: plan.end }));
 } else if (mode === 'probe') {
   const result = await checkGa4({ slot: 'migration-' + process.env.GITHUB_RUN_ID, end,

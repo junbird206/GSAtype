@@ -105,7 +105,12 @@ async function main() {
     const match = /^hour-(\d+)\.json(?:\.lock)?$/.exec(name);
     return match ? [Number(match[1])] : [];
   }));
-  const pending = pendingSlots({ start, end, now: Date.now(), catchUpFrom: Date.parse(plan.catchUpFrom), attempted });
+  let pending = pendingSlots({ start, end, now: Date.now(), catchUpFrom: Date.parse(plan.catchUpFrom), attempted });
+  if (process.env.TRAFFIC_CLOUD_RESERVED !== undefined) {
+    const reserved = JSON.parse(process.env.TRAFFIC_CLOUD_RESERVED);
+    if (!Array.isArray(reserved) || reserved.some(slot => !Number.isInteger(slot) || slot < 0 || slot >= 96)) throw new Error('Invalid cloud reservation');
+    pending = pending.filter(item => reserved.includes(item.slot));
+  }
   if (!pending.length) { console.log('No pending active slots; no requests sent.'); return; }
   console.log(JSON.stringify({ pendingSlots: pending.map(item => item.slot) }));
   // A single wake-up drains missed slots in order, keeping normal per-slot pacing.

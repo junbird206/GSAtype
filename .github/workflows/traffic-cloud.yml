@@ -50,7 +50,7 @@ jobs:
       - name: Save reservations before sending traffic
         uses: actions/upload-artifact@v4
         with:
-          name: traffic-state-20261124-${{ github.run_id }}
+          name: traffic-state-20261124-${{ github.run_id }}-reserved
           path: .local-data/cloud-checkpoint/checkpoint.json
           retention-days: 3
           if-no-files-found: error
@@ -75,6 +75,7 @@ jobs:
         if: steps.state.outputs.active == 'true'
         env:
           NODE_PATH: ${{ runner.temp }}/traffic-runtime/node_modules
+          TRAFFIC_CLOUD_RESERVED: ${{ steps.state.outputs.slots }}
         run: node scripts/traffic-check.mjs
       - name: Export checkpoint and results
         if: always() && steps.state.outcome == 'success'
@@ -83,10 +84,9 @@ jobs:
         if: always() && steps.state.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: traffic-state-20261124-${{ github.run_id }}
+          name: traffic-state-20261124-${{ github.run_id }}-complete
           path: .local-data/cloud-checkpoint/checkpoint.json
           retention-days: 3
-          overwrite: true
       - name: Retain detailed results
         if: always() && steps.state.outcome == 'success'
         uses: actions/upload-artifact@v4
