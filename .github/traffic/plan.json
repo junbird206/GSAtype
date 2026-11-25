@@ -1,0 +1,12 @@
+{
+  "start": "2026-11-24T04:42:55.140Z",
+  "end": "2026-11-27T12:00:00.000Z",
+  "hosts": ["https://mytigertype.com", "https://militarytype.com"],
+  "browserTraffic": true,
+  "promotionClickRate": 0.1,
+  "browserConcurrency": 4,
+  "trafficMultiplier": 3,
+  "ga4FreshBrowserContext": true,
+  "ga4TestLabels": false,
+  "catchUpFrom": "2026-11-24T04:42:55.140Z"
+}
