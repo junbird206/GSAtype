@@ -37,6 +37,7 @@ jobs:
                 ...context.repo, artifact_id: latest.id, archive_format: 'zip'
               });
               fs.writeFileSync('/tmp/traffic-state.zip', Buffer.from(zip.data));
+              fs.mkdirSync('.local-data/cloud-checkpoint', { recursive: true });
               await exec.exec('unzip', ['-o', '/tmp/traffic-state.zip', '-d', '.local-data/cloud-checkpoint']);
             } else {
               const runs = await github.rest.actions.listWorkflowRuns({
