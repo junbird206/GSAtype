@@ -3,7 +3,7 @@ name: Owned Site Browser Checks
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 * 25-27 11 *'
+    - cron: '7,22,37,52 * 25-27 11 *'
 
 permissions:
   contents: read
