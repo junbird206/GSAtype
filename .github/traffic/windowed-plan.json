@@ -1,0 +1,13 @@
+{
+  "campaign": "realtime-20261126",
+  "start": "2026-11-26T06:00:00.000Z",
+  "end": "2026-11-27T03:00:00.000Z",
+  "windows": [
+    {"start": "2026-11-26T06:00:00.000Z", "end": "2026-11-26T17:00:00.000Z"},
+    {"start": "2026-11-27T01:00:00.000Z", "end": "2026-11-27T03:00:00.000Z"}
+  ],
+  "visitsPerQuarter": {"minimum": 25, "maximum": 50},
+  "clickRate": 0.01,
+  "concurrency": 4,
+  "catchUp": false
+}

@@ -9,13 +9,16 @@ const require = createRequire(import.meta.url);
 const sites = [['mytigertype', 'G-Z6042KHWDX'], ['militarytype', 'G-92RLQSND5J']];
 const HOUR = 3_600_000;
 const directory = resolve(dirname(fileURLToPath(import.meta.url)), '../.local-data/traffic-check-20261124');
-export function browserWindowOpen(time, end) {
+export function browserWindowOpen(time, end, windows) {
+  if (windows) return time < end && windows.some(window => time >= Date.parse(window.start) && time < Date.parse(window.end));
   const hour = new Date(time + 9 * HOUR).getUTCHours();
   return time < end && !(hour >= 3 && hour < 8);
 }
-export function clickPlan(count, rate) {
+export function clickPlan(count, rate, randomizedRounding = false) {
   if (!Number.isInteger(count) || count < 1 || count > 1500 || !Number.isFinite(rate) || rate < 0 || rate > 1) throw new Error('Invalid visit/click plan');
-  const clicks = Array.from({ length: count }, (_, index) => index < Math.round(count * rate));
+  const expected = count * rate;
+  const selected = randomizedRounding ? Math.floor(expected) + Number(randomInt(1_000_000) < (expected % 1) * 1_000_000) : Math.round(expected);
+  const clicks = Array.from({ length: count }, (_, index) => index < selected);
   for (let index = count - 1; index > 0; index--) {
     const other = randomInt(index + 1);
     [clicks[index], clicks[other]] = [clicks[other], clicks[index]];
@@ -39,15 +42,17 @@ export function summarizeGa4(result) {
   };
 }
 
-export async function checkGa4({ slot, end, outputDirectory = directory, visitCounts, clickRate = 1, concurrency = 1, targetHost, spreadMs = 0 }) {
-  if (!browserWindowOpen(Date.now(), end)) return { skipped: 'Outside test hours' };
+export async function checkGa4({ slot, end, outputDirectory = directory, visitCounts, clickRate = 1, concurrency = 1, targetHost, spreadMs = 0, windows, randomizedClicks = false }) {
+  const active = () => browserWindowOpen(Date.now(), end, windows);
+  if (!active()) return { skipped: 'Outside test hours' };
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) throw new Error('Invalid browser concurrency');
   if (targetHost && !sites.some(([host]) => host + '.com' === targetHost)) throw new Error('Invalid target host');
   if (!Number.isFinite(spreadMs) || spreadMs < 0 || spreadMs > 24 * 60_000) throw new Error('Invalid pacing');
   const jobs = sites.filter(([host]) => !targetHost || host + '.com' === targetHost).flatMap(([host, id]) => {
     const count = visitCounts ? visitCounts[host + '.com'] : 1;
-    return clickPlan(count, clickRate).map((click, index) => ({ host, id, click, index }));
+    return clickPlan(count, clickRate, randomizedClicks).map((click, index) => ({ host, id, click, index, count }));
   });
+  if (spreadMs) jobs.sort((a, b) => a.index / Math.max(1, a.count - 1) - b.index / Math.max(1, b.count - 1));
   await mkdir(outputDirectory, { recursive: true });
   const output = resolve(outputDirectory, `ga4-hour-${String(slot).padStart(2, '0')}.json`);
   try { await writeFile(output + '.lock', String(process.pid), { flag: 'wx' }); }
@@ -72,12 +77,12 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
   try {
     async function worker() {
     while (!stopped && next < jobs.length) {
-      if (!browserWindowOpen(Date.now(), end)) { result.stopped = 'Quiet hours or deadline'; break; }
+      if (!active()) { result.stopped = 'Quiet hours or deadline'; break; }
       const { host, id, click, index } = jobs[next++];
       const count = visitCounts ? visitCounts[host + '.com'] : 1;
       const wait = paceStart + index * spreadMs / Math.max(1, count - 1) - Date.now();
       if (wait > 0) await sleep(wait);
-      if (stopped || !browserWindowOpen(Date.now(), end)) { result.stopped ||= 'Quiet hours or deadline'; break; }
+      if (stopped || !active()) { result.stopped ||= 'Quiet hours or deadline'; break; }
       // Fresh isolated cookies per check; no client IDs or analytics events are fabricated.
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
       const sample = { host: host + '.com', measurementId: id, visit: index, clickPlanned: click, events: [], error: null, status: 0, ms: 0, started: new Date().toISOString() };
@@ -85,7 +90,7 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
       try {
         await context.route('**/*', route => {
           const url = new URL(route.request().url());
-          if (stopped || !browserWindowOpen(Date.now(), end) || url.pathname.startsWith('/api/')) return route.abort();
+          if (stopped || !active() || url.pathname.startsWith('/api/')) return route.abort();
           if (url.hostname === 'goo.gle') return route.fulfill({ contentType: 'text/html', body: 'Link checked. No signup submitted.' });
           return route.continue();
         });
@@ -104,7 +109,7 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
         });
         const waitForEvent = async name => {
           const until = Math.min(Date.now() + 30_000, end);
-          while (browserWindowOpen(Date.now(), end) && Date.now() < until) {
+          while (active() && Date.now() < until) {
             const event = sample.events.find(e => e.name === name && e.id === id && e.status === 204 && (name === 'page_view' || e.placement === host + '_home'));
             if (event) return event;
             await page.waitForTimeout(300);
@@ -119,7 +124,7 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
         await waitForEvent('page_view');
         await page.locator('[data-promotion=home]').scrollIntoViewIfNeeded();
         await waitForEvent('view_promotion');
-        if (!browserWindowOpen(Date.now(), end)) throw new Error('Test hours ended');
+        if (!active()) throw new Error('Test hours ended');
         if (click) {
           await page.locator('[data-promotion=home] [data-offer-link]').click();
           await waitForEvent('select_promotion');
