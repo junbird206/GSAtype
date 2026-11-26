@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomInt } from 'node:crypto';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 const require = createRequire(import.meta.url);
 const sites = [['mytigertype', 'G-Z6042KHWDX'], ['militarytype', 'G-92RLQSND5J']];
@@ -13,7 +14,7 @@ export function browserWindowOpen(time, end) {
   return time < end && !(hour >= 3 && hour < 8);
 }
 export function clickPlan(count, rate) {
-  if (!Number.isInteger(count) || count < 1 || count > 1200 || !Number.isFinite(rate) || rate < 0 || rate > 1) throw new Error('Invalid visit/click plan');
+  if (!Number.isInteger(count) || count < 1 || count > 1500 || !Number.isFinite(rate) || rate < 0 || rate > 1) throw new Error('Invalid visit/click plan');
   const clicks = Array.from({ length: count }, (_, index) => index < Math.round(count * rate));
   for (let index = count - 1; index > 0; index--) {
     const other = randomInt(index + 1);
@@ -38,10 +39,12 @@ export function summarizeGa4(result) {
   };
 }
 
-export async function checkGa4({ slot, end, outputDirectory = directory, visitCounts, clickRate = 1, concurrency = 1 }) {
+export async function checkGa4({ slot, end, outputDirectory = directory, visitCounts, clickRate = 1, concurrency = 1, targetHost, spreadMs = 0 }) {
   if (!browserWindowOpen(Date.now(), end)) return { skipped: 'Outside test hours' };
-  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new Error('Invalid browser concurrency');
-  const jobs = sites.flatMap(([host, id]) => {
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) throw new Error('Invalid browser concurrency');
+  if (targetHost && !sites.some(([host]) => host + '.com' === targetHost)) throw new Error('Invalid target host');
+  if (!Number.isFinite(spreadMs) || spreadMs < 0 || spreadMs > 24 * 60_000) throw new Error('Invalid pacing');
+  const jobs = sites.filter(([host]) => !targetHost || host + '.com' === targetHost).flatMap(([host, id]) => {
     const count = visitCounts ? visitCounts[host + '.com'] : 1;
     return clickPlan(count, clickRate).map((click, index) => ({ host, id, click, index }));
   });
@@ -65,11 +68,16 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
   };
   await persist();
   const browser = await playwright.chromium.launch(process.env.CI ? {} : { channel: 'chrome' });
+  const paceStart = Date.now();
   try {
     async function worker() {
     while (!stopped && next < jobs.length) {
       if (!browserWindowOpen(Date.now(), end)) { result.stopped = 'Quiet hours or deadline'; break; }
       const { host, id, click, index } = jobs[next++];
+      const count = visitCounts ? visitCounts[host + '.com'] : 1;
+      const wait = paceStart + index * spreadMs / Math.max(1, count - 1) - Date.now();
+      if (wait > 0) await sleep(wait);
+      if (stopped || !browserWindowOpen(Date.now(), end)) { result.stopped ||= 'Quiet hours or deadline'; break; }
       // Fresh isolated cookies per check; no client IDs or analytics events are fabricated.
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
       const sample = { host: host + '.com', measurementId: id, visit: index, clickPlanned: click, events: [], error: null, status: 0, ms: 0, started: new Date().toISOString() };
@@ -77,7 +85,7 @@ export async function checkGa4({ slot, end, outputDirectory = directory, visitCo
       try {
         await context.route('**/*', route => {
           const url = new URL(route.request().url());
-          if (!browserWindowOpen(Date.now(), end) || url.pathname.startsWith('/api/')) return route.abort();
+          if (stopped || !browserWindowOpen(Date.now(), end) || url.pathname.startsWith('/api/')) return route.abort();
           if (url.hostname === 'goo.gle') return route.fulfill({ contentType: 'text/html', body: 'Link checked. No signup submitted.' });
           return route.continue();
         });

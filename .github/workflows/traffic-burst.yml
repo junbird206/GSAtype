@@ -1,0 +1,58 @@
+name: Bounded 1500 Visit Validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: owned-site-browser-checks
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [mytigertype.com, militarytype.com]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify bounded browser plans
+        run: node --test tests/ga4-check.test.mjs
+      - name: Install browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/traffic-runtime" --no-audit --no-fund playwright@1.58.2
+          "$RUNNER_TEMP/traffic-runtime/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Send 1500 visits and 15 promotion clicks
+        env:
+          NODE_PATH: ${{ runner.temp }}/traffic-runtime/node_modules
+          TEST_HOST: ${{ matrix.host }}
+        run: node .github/traffic/burst.mjs
+      - name: Save validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: burst-${{ matrix.host }}-${{ github.run_id }}
+          path: .local-data/burst/*.json
+          retention-days: 3
+          if-no-files-found: warn
+  resume:
+    needs: verify
+    if: always()
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Resume ordinary schedule until its deadline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if node -e 'process.exit(Date.now()<Date.parse("2026-11-27T12:00:00Z")?0:1)'; then
+            gh workflow enable traffic-cloud.yml --repo "$GITHUB_REPOSITORY"
+          fi
