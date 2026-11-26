@@ -72,7 +72,7 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/traffic-runtime/node_modules
         run: node .github/traffic/cloud-state.mjs probe
-      - name: Execute scheduled visits and ten percent clicks
+      - name: Execute visits and configured promotion clicks
         if: steps.state.outputs.active == 'true'
         env:
           NODE_PATH: ${{ runner.temp }}/traffic-runtime/node_modules

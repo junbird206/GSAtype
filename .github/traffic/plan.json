@@ -3,7 +3,7 @@
   "end": "2026-11-27T12:00:00.000Z",
   "hosts": ["https://mytigertype.com", "https://militarytype.com"],
   "browserTraffic": true,
-  "promotionClickRate": 0.1,
+  "promotionClickRate": 0.01,
   "browserConcurrency": 4,
   "trafficMultiplier": 3,
   "ga4FreshBrowserContext": true,

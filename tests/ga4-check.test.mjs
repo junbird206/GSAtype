@@ -30,3 +30,10 @@ test('GA4 summary counts accepted visits and clicks, not HTTP requests', () => {
   assert.equal(result.sites[0].acceptedClicks, 0);
   assert.equal(result.sites[0].errors, 1);
 });
+test('one percent clicks stay within rounding tolerance at all configured volumes', () => {
+  for (let visits = 60; visits <= 1200; visits++) {
+    const clicks = clickPlan(visits, .01).filter(Boolean).length;
+    assert.equal(clicks, Math.round(visits * .01));
+    assert.ok(Math.abs(clicks - visits * .01) <= .5 + Number.EPSILON * visits);
+  }
+});
